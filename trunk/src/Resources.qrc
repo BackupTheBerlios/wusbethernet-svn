@@ -1,0 +1,22 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/configure2.png</file>
+        <file>images/system-help.png</file>
+        <file>images/gtk-quit.png</file>
+        <file>images/gnome-run.png</file>
+        <file>images/qtlogo.png</file>
+    </qresource>
+    <qresource prefix="/icons">
+        <file>images/printer.png</file>
+        <file>images/drive-optical.png</file>
+        <file>images/secure-card.png</file>
+        <file>images/speaker.png</file>
+        <file>images/usbHubIcon.png</file>
+        <file>images/icon_usb_logo.png</file>
+        <file>images/input-keyboard.png</file>
+        <file>images/multimedia-player.png</file>
+        <file>images/network-wireless.png</file>
+        <file>images/camera-web.png</file>
+        <file>images/drive-removable-media-usb.png</file>
+    </qresource>
+</RCC>
