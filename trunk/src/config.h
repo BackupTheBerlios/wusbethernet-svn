@@ -18,7 +18,7 @@
 // Program licence agreement / basis
 #define  PROGLICENCE	"GPL"
 // Program author / domain
-#define  PROGORGADOMAIN	"defaultdomain.de"
+#define  PROGORGADOMAIN	"wusbethernet.berlios.de"
 
 // build "buildin" USB VendorID table
 #define  USE_BUILDIN_USB_VID_TABLE

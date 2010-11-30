@@ -97,6 +97,19 @@ void ConfigManager::setStringValue( const QString & key, const QString & value, 
 		settings->setValue( key, value );
 }
 
+void ConfigManager::setBoolValue( const QString & key, bool value, bool permanentSetting ) {
+	const QString & v = value? "1" : "0";
+	properties[ key ] = v;
+	if ( permanentSetting )
+		settings->setValue( key, v );
+}
+
+void ConfigManager::setIntValue( const QString & key, int value, bool permanentSetting ) {
+	const QString & v = QString::number(value);
+	properties[ key ] = v;
+	if ( permanentSetting )
+		settings->setValue( key, v );
+}
 void ConfigManager::debugPrintout() {
 	QHashIterator<QString, QString>  it( properties );
 	while ( it.hasNext() ) {

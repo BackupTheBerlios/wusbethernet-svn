@@ -18,6 +18,9 @@ private:
     void setValues();
     /** Sets values from GUI into configuration */
     void saveValues();
+private slots:
+	/** Slot called when OK button was clicked */
+	void okButtonSlot();
 };
 
 #endif // PREFERENCESBOX_H

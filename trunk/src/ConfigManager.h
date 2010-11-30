@@ -53,6 +53,14 @@ public:
 	 * will be removed from configuration.
 	 */
 	void setStringValue( const QString & key, const QString & value, bool permanentSetting = true );
+	/**
+	 * Sets the given <tt>value</tt> for <tt>key</tt>.
+	 */
+	void setBoolValue( const QString & key, bool value, bool permanentSetting = true );
+	/**
+	 * Sets the given <tt>value</tt> for <tt>key</tt>.
+	 */
+	void setIntValue( const QString & key, int value, bool permanentSetting = true );
 private:
 	static ConfigManager * instance;
 	Logger * logger;

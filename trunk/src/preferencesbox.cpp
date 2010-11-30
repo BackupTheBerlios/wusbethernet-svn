@@ -13,6 +13,12 @@ PreferencesBox::~PreferencesBox()
 
 }
 
+void PreferencesBox::okButtonSlot() {
+	saveValues();
+	// call "normal" OK button slot
+	accept();
+}
+
 void PreferencesBox::setValues() {
 	ConfigManager & conf = ConfigManager::getInstance();
 
@@ -117,6 +123,58 @@ void PreferencesBox::setValues() {
 }
 
 void PreferencesBox::saveValues() {
+	ConfigManager & conf = ConfigManager::getInstance();
 
+	conf.setBoolValue( "main.startupDiscovery", ui.checkBox->isChecked(), true );
+	int cboxIndex = ui.comboBox->currentIndex();
+	switch ( cboxIndex ) {
+	case 1:
+		// en
+		conf.setStringValue( "main.language", "en", true );
+		break;
+	case 2:
+		// de
+		conf.setStringValue( "main.language", "de", true );
+		break;
+	case 0:
+	default:
+		// auto is default
+		conf.setStringValue( "main.language", "auto", true );
+		break;
+	}
+	conf.setBoolValue( "azurewave.enabled", ui.checkBox_2->isChecked(), true );
+	// azurewave.discovery.addresses  azurewave.discovery.portnumber   azurewave.devctrl.portnumber
+	int intValue = ui.lineEdit_3->text().toInt();
+	if ( intValue > 512 )
+		conf.setIntValue( "azurewave.discovery.portnumber", intValue, true );
+	intValue = ui.lineEdit_4->text().toInt();
+	if ( intValue > 512 )
+		conf.setIntValue( "azurewave.devctrl.portnumber", intValue, true );
+	conf.setStringValue( "azurewave.discovery.addresses", ui.lineEdit->text(), true );
+
+	cboxIndex = ui.comboBox_2->currentIndex();
+	switch ( cboxIndex ) {
+	default:
+	case 0:
+		conf.setIntValue( "azurewave.discovery.type", 1 );
+		break;
+	case 1:
+		conf.setIntValue( "azurewave.discovery.type", 0 );
+		break;
+	case 2:
+		conf.setIntValue( "azurewave.discovery.type", 2 );
+		break;
+	}
+
+
+	// logging / debug
+	conf.setBoolValue("main.logging.enableConsole", ui.checkBox_3->isChecked(), true );
+	conf.setBoolValue("main.logging.enableLogfiles", ui.checkBox_4->isChecked(), true );
+	conf.setBoolValue("main.logging.enableFileAppend", ui.checkBox_5->isChecked(), true );
+	conf.setStringValue( "main.logging.directory", ui.lineEdit_2->text(), true );
+
+	intValue = ui.comboBox_3->currentIndex();
+	if ( intValue >= 0 && intValue < 5 )
+		conf.setIntValue( "main.logging.loglevel", intValue );
 }
 

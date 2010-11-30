@@ -12,16 +12,17 @@
 #include "preferencesbox.h"
 #include "AboutBox.h"
 #include <QMessageBox>
+#include <QTimer>
 #include "QMenu"
 
 mainFrame::mainFrame(QWidget *parent)
     : QMainWindow(parent)
 {
-	ui.setupUi(this);
-	setUpToolbar();
 	cc = NULL;
 	prefBoxDialog = NULL;
 
+	ui.setupUi(this);
+	setUpToolbar();
 }
 
 mainFrame::~mainFrame()
@@ -37,6 +38,10 @@ void mainFrame::setUpToolbar() {
 //	runAction->setChecked( true );
 	connect(runAction, SIGNAL(triggered()), this, SLOT(runDiscovery()));
 	ui.toolBar->addAction(runAction);
+	if ( ConfigManager::getInstance().getBoolValue("main.startupDiscovery", false ) ) {
+		runAction->setChecked( true );
+		QTimer::singleShot ( 200, this, SLOT( runDiscovery() ) );
+	}
 
 
 	editAction = new QAction( QIcon(":/images/configure2.png"), tr("&Preferences"), this );
@@ -123,8 +128,14 @@ void mainFrame::contextMenuSlot( const QPoint & pos ) {
 }
 
 void mainFrame::editPreferencesBoxFinished( int result ) {
-	printf("Result = %i\n", result );
 	if ( prefBoxDialog ) {
+		if ( result == 1 ) {
+			// OK button was pressed
+			ConfigManager & conf = ConfigManager::getInstance();
+			//  set logger:
+			Logger::enableConsoleLogging( conf.getBoolValue("main.logging.enableConsole", false ));
+			Logger::enableFileLogging( conf.getBoolValue( "main.logging.enableLogfiles", false ));
+		}
 		disconnect( prefBoxDialog, SIGNAL(finished(int)), this, SLOT(editPreferencesBoxFinished( int ) ) );
 		prefBoxDialog = NULL;
 	}

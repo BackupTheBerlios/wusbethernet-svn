@@ -28,7 +28,7 @@
         <string/>
        </property>
        <property name="currentIndex">
-        <number>0</number>
+        <number>2</number>
        </property>
        <property name="documentMode">
         <bool>false</bool>
@@ -443,7 +443,7 @@
    <sender>buttonBox</sender>
    <signal>accepted()</signal>
    <receiver>PreferencesBoxClass</receiver>
-   <slot>accept()</slot>
+   <slot>okButtonSlot()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>212</x>
@@ -472,4 +472,7 @@
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>okButtonSlot()</slot>
+ </slots>
 </ui>

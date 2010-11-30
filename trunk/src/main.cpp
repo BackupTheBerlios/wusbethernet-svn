@@ -169,7 +169,7 @@ int main( int argc, char *argv[] ) {
 	//  - to ensure access to stored configuration values we need
 	//    to set application name and organization name first...
 	QCoreApplication::setApplicationName(PROGNAME);
-	QCoreApplication::setOrganizationName(PROGAUTHOR);
+	QCoreApplication::setOrganizationName(PROGNAME);
 	QCoreApplication::setOrganizationDomain(PROGORGADOMAIN);
 
 	ConfigManager & conf = ConfigManager::getInstance();
