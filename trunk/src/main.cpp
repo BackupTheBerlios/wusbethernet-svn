@@ -24,7 +24,7 @@
 void initLogger( ConfigManager & conf ) {
 	Logger *l = Logger::getLogger();
 	Logger::LogLevel loglevel = Logger::LOGLEVEL_INFO;
-	int confLoglevel = conf.getIntValue("main.logging.loglevel", 3 );
+	int confLoglevel = conf.getIntValue("main.logging.loglevel", 1 );
 	switch( confLoglevel ) {
 	case 0:
 		loglevel = Logger::LOGLEVEL_ERROR;	break;
@@ -37,7 +37,7 @@ void initLogger( ConfigManager & conf ) {
 	case 4:
 		loglevel = Logger::LOGLEVEL_TRACE;	break;
 	}
-	bool enableConsoleLogging = conf.getBoolValue("main.logging.enableConsole", false );
+	bool enableConsoleLogging = conf.getBoolValue("main.logging.enableConsole", true );
 	bool enableFileLogging = conf.getBoolValue("main.logging.enableLogfiles", false );
 	bool enableLogfileAppend = conf.getBoolValue("main.logging.enableFileAppend", false );
 

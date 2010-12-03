@@ -1,5 +1,8 @@
 /*
  * mainframe.cpp
+ * This builds up and displays the "main window" of application.
+ * If auto startup of device discovery is enabled this will be started. Otherwise
+ * start is triggered by button.
  *
  * @author:		Sebastian Kolbe-Nusser &lt;Sebastian DOT Kolbe AT gmail DOT com&gt;
  * @version:	$Id$

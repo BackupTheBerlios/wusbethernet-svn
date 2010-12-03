@@ -39,22 +39,29 @@ public:
 
 private:
 	static bool isFirstInstance;
+
     struct answerMessageParts {
     	bool isCorrect;
     	int senderTAN;
     	int receiverTAN;
     	int TAN;
-    	unsigned int packetNum;
+    	unsigned int packetNum;		// packet counter
+    	int contentLength;	// length of contentURB
     	bool isComplete;
     	bool transactionCompleted;
     	QByteArray * contentURB;
     };
+
 	WusbStack * parentRef;
 	Logger * logger;
 	QByteArray * internalBuffer;
 	QByteArray lastReceivedPacket;
 	int bytesLeftInCurrentTask;
+	struct WusbMessageBuffer::answerMessageParts incompleteMessage;
+	bool lastMessageWasIncomplete;
+
 	struct WusbMessageBuffer::answerMessageParts splitMessage( const QByteArray & bytes );
+	struct WusbMessageBuffer::answerMessageParts splitContinuedMessage( const QByteArray & bytes );
 public slots:
 	/**
 	 * Receive bytes read from network and add message to internal buffering/processing.

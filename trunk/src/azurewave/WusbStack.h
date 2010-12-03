@@ -26,8 +26,11 @@ class Logger;
 class USBconnectionWorker;
 
 #define WUSB_AZUREWAVE_SEND_HEADER_LEN		28
+#define WUSB_AZUREWAVE_SEND_SUBSQ_HEADER_LEN	4
 #define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN	24
 #define WUSB_AZUREWAVE_TIMER_INTERVAL		100
+// maximum size of one network packet (protocol/device does not support bigger packets or fragments!)
+#define WUSB_NETWORK_DEFAULT_MTU			1472
 
 class WusbStack : public QObject {
 	Q_OBJECT
@@ -150,6 +153,7 @@ private:
 	void stopTimer();
 
 private slots:
+	/** Receive routine to read data on UDP socket. Will be called upon signal from QT socket stack. */
 	void processPendingData();
 	void socketError(QAbstractSocket::SocketError socketError);
 	void processStatusMessage( WusbMessageBuffer::TypeOfMessage typeMsg );

@@ -6,6 +6,7 @@ PreferencesBox::PreferencesBox(QWidget *parent)
 {
 	ui.setupUi(this);
 	setAttribute( Qt::WA_DeleteOnClose, true );	// deletes this widget on close
+	setValues();
 }
 
 PreferencesBox::~PreferencesBox()
@@ -84,7 +85,7 @@ void PreferencesBox::setValues() {
 
 	// Debug / Logging settings
 	if ( conf.haveKey("main.logging.enableConsole" ) )
-		ui.checkBox_3->setChecked( conf.getBoolValue("main.logging.enableConsole", false ) );
+		ui.checkBox_3->setChecked( conf.getBoolValue("main.logging.enableConsole", true ) );
 	else
 		ui.checkBox_3->setChecked( false );
 	if ( conf.haveKey("main.logging.enableLogfiles" ) )
@@ -101,7 +102,7 @@ void PreferencesBox::setValues() {
 		ui.lineEdit_2->setText(conf.getStringValue("main.logging.directory", "/tmp/USBhubConnect/"));
 
 	if ( conf.haveKey("main.logging.loglevel") ) {
-		int confLoglevel = conf.getIntValue("main.logging.loglevel", 3 );
+		int confLoglevel = conf.getIntValue("main.logging.loglevel", 1 );
 		switch ( confLoglevel ) {
 		case 0:
 			// Error
