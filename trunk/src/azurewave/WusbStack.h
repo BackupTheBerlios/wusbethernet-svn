@@ -109,6 +109,8 @@ public:
 
 
 private:
+	static bool isFirstInstance;
+
 	enum State {
 		STATE_DISCONNECTED,
 		STATE_CONNECTED,

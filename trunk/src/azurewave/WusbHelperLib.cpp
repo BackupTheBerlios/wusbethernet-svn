@@ -8,6 +8,8 @@
 
 #include "WusbHelperLib.h"
 #include "../utils/LogWriter.h"
+#include "../ConfigManager.h"
+#include "../BasicUtils.h"
 #include <stdlib.h>
 #include <QMutexLocker>
 #include <QString>
@@ -15,12 +17,11 @@
 
 // init static variables
 QMutex WusbHelperLib::packetCountMutex;
-unsigned int WusbHelperLib::packetCounter = 0x01010101; //::time(0);
+unsigned int WusbHelperLib::packetCounter = 0x01010101;
 
-WusbHelperLib::WusbHelperLib() {
-}
-
-WusbHelperLib::~WusbHelperLib() {
+void WusbHelperLib::initPacketCounter() {
+	// initialize the packet counter
+	WusbHelperLib::packetCounter = ConfigManager::getInstance().getIntValue( "main.startTimestamp", WusbHelperLib::packetCounter );
 }
 
 unsigned int WusbHelperLib::getIncrementedPacketCounter() {

@@ -22,10 +22,18 @@
 #include <unistd.h>
 #include <time.h>
 
-
+/** flag, if this is the first instantiation of this class.
+ * On first instance some supplemental init code is needed. */
+bool WusbStack::isFirstInstance = true;
 
 WusbStack::WusbStack( USBconnectionWorker *parent, const QHostAddress & destinationAddress, int destinationPort )
 : QObject() {
+	// XXX this is not threadsafe
+	if ( WusbStack::isFirstInstance ) {
+		WusbHelperLib::initPacketCounter();
+		WusbStack::isFirstInstance = false;
+	}
+
 	logger = parent->getLogger();
 	state = STATE_DISCONNECTED;
 	destAddress = QHostAddress( destinationAddress );
@@ -207,12 +215,7 @@ void WusbStack::processPendingData() {
 		if ( bytesRead > 0 ) {
 			if ( logger->isDebugEnabled() )
 				logger->debug(QString("Received %1 bytes from network: %2").arg( QString::number(bytesRead), WusbHelperLib::messageToString( datagram, bytesRead )) );
-/*			receiveBufferMutex.lock();
-			receiveBuffer.append( datagram );
-			receiveBufferMutex.unlock();
-*/
-			// XXX inform reader thread for new data
-//			messageBuffer->receive( datagram )
+
 			if ( datagram.size() > maxMTU ) {
 				// remote device sent faster than we could receive or process
 				// -> multiple messages are concatuated in buffer

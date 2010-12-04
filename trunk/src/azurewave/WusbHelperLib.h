@@ -16,8 +16,8 @@ class QString;
 
 class WusbHelperLib {
 public:
-	WusbHelperLib();
-	virtual ~WusbHelperLib();
+	/** Initialize the packet counter with an value calculated from system uptime and program runtime */
+	static void initPacketCounter();
 
 	static unsigned int getIncrementedPacketCounter();
 

@@ -11,7 +11,16 @@
 
 #include <QString>
 
+/**
+ * Pauses the current thread for given time.
+ * Note that on most computers duration is not exact.
+ * @param	millis	sleep time in milli seconds.
+ */
 extern void sleepThread( long millis );
+/**
+ * Returns system time in milli seconds since 1. Jan 1970 midnight (unix timestamp).
+ * @return	time in milli seconds since the epoch.
+ */
 extern long long currentTimeMillis();
 /**
  * <em>Flips</em> an IP-address from little-endian to big-endian notation and v.v.
