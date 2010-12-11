@@ -41,14 +41,14 @@ long long currentTimeMillis() {
 
 QString flipIPaddress( const QString & address ) {
 	if ( address.isNull() || address.isEmpty() ) return QString::null;
-
+	printf("FlipIPaddress: %s\n", address.toUtf8().data() );
 	QStringList list;
-	list = address.split(QRegExp("[\.:]"));
+	list = address.split(QRegExp("[\\.:]"));
 	QString retStr = QString();
 	int len = list.length();
-	for ( int i = 0; i < len; i++ ) {
+	for ( int i = len-1; i >= 0; i-- ) {
 		retStr.append( list[i] );
-		if ( i < len-1 )
+		if ( i > 0 )
 			retStr.append('.');
 	}
 	return retStr;

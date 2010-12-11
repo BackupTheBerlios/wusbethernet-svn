@@ -91,8 +91,8 @@ ABSOLUTELY NO WARRANTY.</source>
     <name>HubDevice</name>
     <message>
         <location filename="../src/azurewave/HubDevice.cpp" line="459"/>
-        <source>%1 - Used by %2</source>
-        <translation></translation>
+        <source>%1 - Used by &lt;em&gt;%2&lt;/em&gt; (%3)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../src/azurewave/HubDevice.cpp" line="473"/>
@@ -128,147 +128,188 @@ ABSOLUTELY NO WARRANTY.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="70"/>
+        <location filename="../src/preferencesbox.ui" line="69"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Sans Serif&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;table style=&quot;-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;border: none;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Language of user interface&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;(use &lt;span style=&quot; font-style:italic;&quot;&gt;AUTO&lt;/span&gt; to use system language)&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/preferencesbox.ui" line="81"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="75"/>
+        <location filename="../src/preferencesbox.ui" line="86"/>
         <source>English</source>
         <comment>en</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="80"/>
+        <location filename="../src/preferencesbox.ui" line="91"/>
         <source>German</source>
         <comment>de</comment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="94"/>
+        <location filename="../src/preferencesbox.ui" line="105"/>
+        <source>Start discovery of remote devices when
+program starts - otherwise start discovery
+manually with toolbar button.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/preferencesbox.ui" line="110"/>
         <source>Start device discovery on startup</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="100"/>
+        <location filename="../src/preferencesbox.ui" line="116"/>
         <source>Medion MD86097</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="112"/>
-        <source>Enable this type of device</source>
+        <location filename="../src/preferencesbox.ui" line="128"/>
+        <source>Enable this type of device - 
+discovery service will try to find
+remote devices of this type.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="115"/>
+        <location filename="../src/preferencesbox.ui" line="133"/>
         <source>Enable protocol</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="135"/>
+        <location filename="../src/preferencesbox.ui" line="149"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Sans Serif&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;table style=&quot;-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;border: none;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Specify method of device discovery:
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Broadcast local&lt;/em&gt; &lt;b&gt;--&lt;/b&gt; use broadcast messages in local network (specified by network configuration) (&lt;b&gt;default&lt;/b&gt;)&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Broadcast global&lt;/em&gt; &lt;b&gt;--&lt;/b&gt; use broadcast messages (simple broadcast to all devices)&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Selected IP addresses&lt;/em&gt; &lt;b&gt;--&lt;/b&gt; try to find devices on given IP addresses in network&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/p&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/preferencesbox.ui" line="170"/>
         <source>Broadcast local</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="140"/>
+        <location filename="../src/preferencesbox.ui" line="175"/>
         <source>Broadcast global/simple</source>
         <extracomment>asd</extracomment>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="145"/>
+        <location filename="../src/preferencesbox.ui" line="180"/>
         <source>Selected IP address(es)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="159"/>
+        <location filename="../src/preferencesbox.ui" line="194"/>
         <source>Run discovery on selected address type</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="162"/>
+        <location filename="../src/preferencesbox.ui" line="197"/>
         <source>Discovery address type:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="175"/>
+        <location filename="../src/preferencesbox.ui" line="210"/>
         <source>IP addresses of USB hub devices (separated by comma)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="188"/>
+        <location filename="../src/preferencesbox.ui" line="223"/>
         <source>Discovery port:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="204"/>
+        <location filename="../src/preferencesbox.ui" line="239"/>
         <source>16708</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="220"/>
+        <location filename="../src/preferencesbox.ui" line="255"/>
         <source>Control connection port:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="236"/>
+        <location filename="../src/preferencesbox.ui" line="271"/>
         <source>21827</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="245"/>
+        <location filename="../src/preferencesbox.ui" line="280"/>
         <source>Extra / Debug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="257"/>
+        <location filename="../src/preferencesbox.ui" line="292"/>
         <source>Write log / debug messages to console</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="260"/>
+        <location filename="../src/preferencesbox.ui" line="295"/>
         <source>Console output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="273"/>
+        <location filename="../src/preferencesbox.ui" line="308"/>
         <source>Logging:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="286"/>
+        <location filename="../src/preferencesbox.ui" line="321"/>
         <source>Write log / debug messages to file(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="289"/>
+        <location filename="../src/preferencesbox.ui" line="324"/>
         <source>File output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="305"/>
+        <location filename="../src/preferencesbox.ui" line="340"/>
         <source>Directory for log files
 (will be created if not existing)
 [use / as separator!]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="310"/>
+        <location filename="../src/preferencesbox.ui" line="345"/>
         <source>/tmp/USBhubConnect/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="326"/>
+        <location filename="../src/preferencesbox.ui" line="361"/>
         <source>Dir:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="374"/>
+        <location filename="../src/preferencesbox.ui" line="409"/>
         <source>Log level:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="387"/>
+        <location filename="../src/preferencesbox.ui" line="422"/>
         <source>Append to existing files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -382,42 +423,42 @@ ABSOLUTELY NO WARRANTY.</source>
 <context>
     <name>mainFrame</name>
     <message>
-        <location filename="../src/mainframe.cpp" line="34"/>
+        <location filename="../src/mainframe.cpp" line="38"/>
         <source>&amp;Run</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="35"/>
+        <location filename="../src/mainframe.cpp" line="39"/>
         <source>Start/Stop network discovery</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="42"/>
+        <location filename="../src/mainframe.cpp" line="50"/>
         <source>&amp;Preferences</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="43"/>
+        <location filename="../src/mainframe.cpp" line="51"/>
         <source>Show/Edit preferences</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="47"/>
+        <location filename="../src/mainframe.cpp" line="55"/>
         <source>&amp;About</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="48"/>
+        <location filename="../src/mainframe.cpp" line="56"/>
         <source>About this program and help</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="52"/>
+        <location filename="../src/mainframe.cpp" line="60"/>
         <source>&amp;Quit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="53"/>
+        <location filename="../src/mainframe.cpp" line="61"/>
         <source>Exit program</source>
         <translation></translation>
     </message>

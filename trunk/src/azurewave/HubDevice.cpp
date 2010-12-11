@@ -456,7 +456,7 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 	QString claimedText = "";
 	if ( usbDevice.status == USBTechDevice::PS_Claimed ) {
 		claimedText = QString("<br>Claimed by: <em>%1 (%2)</em>").arg( usbDevice.claimedByName, usbDevice.claimedByIP );
-		usbDevice.visualTreeWidgetItem->setText(0, tr("%1 - Used by %2").arg( usbDevice.product, usbDevice.claimedByName ) );
+		usbDevice.visualTreeWidgetItem->setText(0, tr("%1 - Used by <em>%2</em> (%3)").arg( usbDevice.product, usbDevice.claimedByName, usbDevice.claimedByIP ) );
 		if ( usbDevice.owned ) {
 			usbDevice.visualTreeWidgetItem->setBackgroundColor( 0, QColor( 0, 255, 0, 127 ) );
 			usbDevice.visualTreeWidgetItem->setCheckState( 0, Qt::Checked );
