@@ -9,6 +9,8 @@
 #include "HubDevice.h"
 #include "XMLmessageDOMparser.h"
 #include "ConnectionController.h"
+#include "WusbStack.h"
+#include "../TI_WusbStack.h"
 #include "../ConfigManager.h"
 #include "../Textinfoview.h"
 #include "../utils/Logger.h"
@@ -85,6 +87,17 @@ HubDevice::~HubDevice() {
 Logger * HubDevice::getLogger() {
 	return logger;
 }
+
+TI_WusbStack * HubDevice::createStackForDevice( const QString & deviceID ) {
+	USBTechDevice & deviceRef = findDeviceByID( deviceID );
+	if ( deviceRef.isValid ) {
+		Logger * logger = Logger::getLogger( QString("USBConn") + QString::number( deviceRef.connectionPortNum) );
+		return new WusbStack( logger, QHostAddress(ipAddress), deviceRef.connectionPortNum );
+	} else
+		return NULL;
+}
+
+
 
 void HubDevice::setXMLdiscoveryData( int len, const QByteArray & payloadData ) {
 	DiscoveryMessageContent *parseResult = XMLmessageDOMparser::parseDiscoveryMessage( payloadData );
@@ -295,6 +308,7 @@ bool HubDevice::queryDeviceInfo() {
 /**
  * Create and send an <tt>import</tt> message to hub to take ownership
  * of a specific device.
+<code>
 0000   66 66 68 00 00 9e 3c 69 6d 70 6f 72 74 3e 3c 68  ffh...<import><h
 0010   6f 73 74 4e 61 6d 65 3e 64 75 73 73 65 6c 3c 2f  ostName>dussel</
 0020   68 6f 73 74 4e 61 6d 65 3e 3c 64 65 76 69 63 65  hostName><device
@@ -306,16 +320,32 @@ bool HubDevice::queryDeviceInfo() {
 0080   74 79 70 65 3d 22 68 65 78 22 3e 31 30 30 30 3c  type="hex">1000<
 0090   2f 69 64 50 72 6f 64 75 63 74 3e 3c 2f 69 6d 70  /idProduct></imp
 00a0   6f 72 74 3e                                      ort>
+</code>
  */
 bool HubDevice::sendImportDeviceMessage( const QString & deviceID, const QString & deviceVendor,const QString & deviceProd ) {
 	if ( !controlConnectionSocket )
 		return false;
-	logger->info( QString("Sending import request for device: %1 (%2/%3) on host: %4").arg(
-			deviceID, deviceVendor, deviceProd,
-			ConfigManager::getInstance().getStringValue("hostname","localhost") ) );
+
+	// get vendor/product-ID with trailing '0'
+	QString vendorID = deviceVendor;
+	if ( vendorID.length() < 4 )
+		vendorID = vendorID.rightJustified(4, '0', true);
+	QString prodID = deviceProd;
+	if ( prodID.length() < 4 )
+		prodID = prodID.rightJustified(4, '0', true);
+
+	if ( logger->isInfoEnabled() )
+		logger->info( QString("Sending import request for device: %1 (%2/%3) on host: %4").arg(
+				deviceID, deviceVendor, deviceProd,
+				ConfigManager::getInstance().getStringValue("hostname","localhost") ) );
+
 	// The XML fragment to send to USB hub
-	QString str = QString("<import><hostName>%1</hostName><deviceID type=\"hex\">%2</deviceID>"
-			"<idVendor type=\"hex\">%3</idVendor><idProduct type=\"hex\">%4</idProduct></import>").arg(
+	QString str = QString("<import>"
+			"<hostName>%1</hostName>"
+			"<deviceID type=\"hex\">%2</deviceID>"
+			"<idVendor type=\"hex\">%3</idVendor>"
+			"<idProduct type=\"hex\">%4</idProduct>"
+			"</import>").arg(
 					ConfigManager::getInstance().getStringValue("hostname","localhost"),
 					deviceID, deviceVendor, deviceProd
 					);
@@ -328,14 +358,70 @@ bool HubDevice::sendImportDeviceMessage( const QString & deviceID, const QString
 	buffer.append( (lenPayload & 0x00ff0000) >> 16 );	// 3.byte of length
 	buffer.append( (lenPayload & 0x0000ff00) >> 8 );	// 2.byte of length
 	buffer.append( (lenPayload & 0x000000ff) );		 	// LSB byte of length
-	// Append XML query
+	// append XML query
 	buffer.append( str );
 	// write all to network
 	qint64 bytesWritten = controlConnectionSocket->write( buffer );
 	if ( bytesWritten <= 0 )
 		return false;
 	return true;
+}
 
+/**
+ * Create and send an <tt>unimport</tt> message to hub to request
+ * release of a specific device claimed by other host.
+ * <code>
+0000   66 66 69 00 00 58 3c 75 6e 69 6d 70 6f 72 74 3e  ffi..X<unimport>
+0010   3c 68 6f 73 74 4e 61 6d 65 3e 64 75 73 73 65 6c  <hostName>dussel
+0020   3c 2f 68 6f 73 74 4e 61 6d 65 3e 3c 64 65 76 69  </hostName><devi
+0030   63 65 49 44 20 74 79 70 65 3d 22 68 65 78 22 3e  ceID type="hex">
+0040   64 64 63 63 62 62 61 61 3c 2f 64 65 76 69 63 65  ddccbbaa</device
+0050   49 44 3e 3c 2f 75 6e 69 6d 70 6f 72 74 3e        ID></unimport>
+</code>
+*/
+bool HubDevice::sendUnimportMessage( const QString & deviceID, const QString & message ) {
+	if ( !controlConnectionSocket )
+		return false;
+	ConfigManager & confMgr = ConfigManager::getInstance();
+
+	if ( logger->isInfoEnabled() )
+		logger->info( QString("Sending unimport request for device: %1 on host: %2").arg(
+				deviceID,
+				confMgr.getStringValue("hostname","localhost") ) );
+
+	// optionally include username into unimport request (username@hostname)
+	// NOTE: unknown if this brings trouble to specific firmware or client software releases???
+	QString hostname;
+	if ( confMgr.getBoolValue( "azurewave.devctrl.addUnimportUsername", false ) )
+		hostname = QString("%1@%2").arg(
+				confMgr.getStringValue("username","nobody"),
+				confMgr.getStringValue("hostname","localhost") );
+	else
+		hostname = confMgr.getStringValue("hostname","localhost");
+
+	// The XML fragment to send to USB hub
+	QString str = QString("<unimport>"
+			"<hostName>%1</hostName>"
+			"<deviceID type=\"hex\">%2</deviceID>"
+			"</unimport>").arg(
+					hostname,
+					deviceID );
+	QByteArray buffer;
+	// First: create header 66 66 69 00 00 10 3c 67 [..]
+	buffer.append( 'f' ); // 0x66
+	buffer.append( 'f' ); // 0x66
+	buffer.append( 'i' ); // 0x69
+	int lenPayload = str.length();
+	buffer.append( (lenPayload & 0x00ff0000) >> 16 );	// 3.byte of length
+	buffer.append( (lenPayload & 0x0000ff00) >> 8 );	// 2.byte of length
+	buffer.append( (lenPayload & 0x000000ff) );		 	// LSB byte of length
+	// append XML query
+	buffer.append( str );
+	// write all to network
+	qint64 bytesWritten = controlConnectionSocket->write( buffer );
+	if ( bytesWritten <= 0 )
+		return false;
+	return true;
 }
 
 /**
@@ -453,10 +539,12 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 		classID = usbDevice.interfaceList[0].if_class;
 		subClassID = usbDevice.interfaceList[0].if_subClass;
 	}
-	QString claimedText = "";
+	QString claimedText = "";	// Tooltip text (part of)
 	if ( usbDevice.status == USBTechDevice::PS_Claimed ) {
 		claimedText = QString("<br>Claimed by: <em>%1 (%2)</em>").arg( usbDevice.claimedByName, usbDevice.claimedByIP );
-		usbDevice.visualTreeWidgetItem->setText(0, tr("%1 - Used by <em>%2</em> (%3)").arg( usbDevice.product, usbDevice.claimedByName, usbDevice.claimedByIP ) );
+		// text to display in tree widget (right to check box)
+		// TODO checkout why its not working / how to display html formatted text
+		usbDevice.visualTreeWidgetItem->setText(0, tr("%1 - Used by %2 (%3)").arg( usbDevice.product, usbDevice.claimedByName, usbDevice.claimedByIP ) );
 		if ( usbDevice.owned ) {
 			usbDevice.visualTreeWidgetItem->setBackgroundColor( 0, QColor( 0, 255, 0, 127 ) );
 			usbDevice.visualTreeWidgetItem->setCheckState( 0, Qt::Checked );
@@ -581,7 +669,7 @@ QString HubDevice::getIconResourceForDevice( USBTechDevice & usbDevice ) {
 		// Miscellaneous, often mobile devices with sync (Palm-Sync, Active Sync, etc.)
 		return QString(":/icons/images/multimedia-player.png");
 	}
-	return QString(":/images/icon_usb_logo.png");
+	return QString(":/icons/images/icon_usb_logo.png");
 }
 
 
@@ -592,7 +680,7 @@ void HubDevice::queryDevice( USBTechDevice * deviceRef ) {
 	if ( ! deviceRef ) return;
 	if ( ! deviceRef->isValid || deviceRef->owned || deviceRef->status != USBTechDevice::PS_Plugged ||
 			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
-		logger->warn( QString("Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
+		logger->warn( QString("Query OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
 				deviceRef->isValid? QString("true") : QString("false"),
 				deviceRef->owned? QString("true") : QString("false"),
 				QString::number( (int) deviceRef->status )
@@ -600,16 +688,10 @@ void HubDevice::queryDevice( USBTechDevice * deviceRef ) {
 		return;
 	}
 
-	// get vendor/product-ID with trailing '0'
-	QString vendorID = QString::number(deviceRef->idVendor, 16);
-	if ( vendorID.length() < 4 )
-		vendorID = vendorID.rightJustified(4, '0', true);
-	QString prodID = QString::number(deviceRef->idProduct, 16);
-	if ( prodID.length() < 4 )
-		prodID = prodID.rightJustified(4, '0', true);
-
 	// Register connection on control channel
-	sendImportDeviceMessage( deviceRef->deviceID, vendorID, prodID );
+	sendImportDeviceMessage( deviceRef->deviceID,
+			QString::number(deviceRef->idVendor, 16),
+			QString::number(deviceRef->idProduct, 16) );
 
 	deviceRef->nextJobID = 1;
 }
@@ -626,6 +708,30 @@ void HubDevice::queryDeviceJob( USBTechDevice & deviceRef ) {
 	deviceRef.connWorker->queryDevice( QHostAddress(ipAddress), deviceRef.connectionPortNum );
 	deviceRef.nextJobID = 0;
 }
+
+void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
+	if ( ! deviceRef ) return;
+	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ||
+			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
+		logger->warn( QString("Disconnect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
+				deviceRef->isValid? QString("true") : QString("false"),
+				deviceRef->owned? QString("true") : QString("false"),
+				QString::number( (int) deviceRef->status )
+		) );
+		return;
+	}
+	if ( deviceRef->status == USBTechDevice::PS_Claimed && deviceRef->owned ) {
+		// TODO Device is claimed by us -> need to implement disconnect
+		logger->warn( QString("Sorry: Device disconnect not implemented yet...") );
+	} else if ( deviceRef->status == USBTechDevice::PS_Claimed && !deviceRef->owned ) {
+		// send "unimport" message to hub
+		sendUnimportMessage( deviceRef->deviceID, QString::null );
+		// no direct answer from device expected!
+		//  (sometimes a "status changed" message is emmitted -> processed in normal way
+		deviceRef->nextJobID = 0;
+	}
+}
+
 
 void HubDevice::connectionWorkerJobDone( USBconnectionWorker::WorkDoneExitCode exitCode, USBTechDevice * deviceRef ) {
 	if ( logger->isDebugEnabled() )

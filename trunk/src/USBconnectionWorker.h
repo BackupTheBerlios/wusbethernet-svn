@@ -13,6 +13,7 @@
 #include <QString>
 #include <QHostAddress>
 
+class TI_WusbStack;
 class WusbStack;
 class USBdeviceInfoProducer;
 class HubDevice;
@@ -88,7 +89,7 @@ private:
 	JobType currentJob;
 
 	QByteArray buffer;
-	WusbStack *stack;
+	TI_WusbStack *stack;
 	Logger * logger;
 	USBdeviceInfoProducer * deviceQueryEngine;
 

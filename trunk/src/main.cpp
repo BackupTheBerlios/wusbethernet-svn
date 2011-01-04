@@ -156,6 +156,15 @@ void initConfiguration( ConfigManager & conf ) {
 	if ( !conf.haveKey( "hostname" ) ||
 			conf.getStringValue("hostname").isNull() || conf.getStringValue("hostname").isEmpty() )
 		conf.setStringValue("hostname","localhost", false);
+
+	// username (login)
+	char * usernameEnv = ::getenv("USER");
+	if ( usernameEnv && ::strnlen(usernameEnv, 64) > 0 )
+		conf.setStringValue( "username", QString( usernameEnv ).simplified(), false );
+	if ( !conf.haveKey( "username" ) ||
+			conf.getStringValue("username").isNull() || conf.getStringValue("username").isEmpty() )
+		conf.setStringValue("username","nobody", false);
+
 }
 
 int main( int argc, char *argv[] ) {

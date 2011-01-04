@@ -83,6 +83,9 @@ void PreferencesBox::setValues() {
 	else
 		ui.lineEdit_4->setText( "21827" );
 
+	ui.checkBox_6->setChecked( conf.getBoolValue( "azurewave.devctrl.addUnimportUsername", false ) );
+
+
 	// Debug / Logging settings
 	if ( conf.haveKey("main.logging.enableConsole" ) )
 		ui.checkBox_3->setChecked( conf.getBoolValue("main.logging.enableConsole", true ) );
@@ -166,6 +169,7 @@ void PreferencesBox::saveValues() {
 		conf.setIntValue( "azurewave.discovery.type", 2 );
 		break;
 	}
+	conf.setBoolValue( "azurewave.devctrl.addUnimportUsername", ui.checkBox_6->isChecked(), true );
 
 
 	// logging / debug

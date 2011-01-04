@@ -9,6 +9,7 @@
 #ifndef HUBDEVICE_H_
 #define HUBDEVICE_H_
 
+#include "../TI_USBhub.h"
 #include "ControlMessageBuffer.h"
 #include "../USBconnectionWorker.h"
 #include <QObject>
@@ -181,12 +182,12 @@ Q_DECLARE_METATYPE( USBTechDevice* )
 /**
  * Represents one network usb hub device.
  */
-class HubDevice : public QObject {
+class HubDevice : public TI_USBhub {
 	Q_OBJECT
 friend class XMLmessageDOMparser;
 public:
 	HubDevice( const QHostAddress & address, ConnectionController * controller, int discoveredDeviceNumber = 0 );
-	~HubDevice();
+	virtual ~HubDevice();
 	void setXMLdiscoveryData( int len, const QByteArray & payloadData );
 	/**
 	 * Return state if this network hub device is still alive or unreachable.
@@ -211,6 +212,17 @@ public:
 	void queryDevice( USBTechDevice * deviceRef );
 
 	/**
+	 * Disconnect (release) a connected device.<br>
+	 * This works for own connected (<em>claimed</em> and <em>owned</em>) devices
+	 * as well as for devices connected to different hosts on LAN (<em>claimed</em>).<br>
+	 * If a device is claimed by a different host a "disconnect request" will
+	 * pop up on that computer. Unfortunatly there is only small influence on
+	 * displayed message from here.
+	 *
+	 */
+	void disconnectDevice( USBTechDevice * deviceRef );
+
+	/**
 	 * Finds a specific device by given device ID.
 	 */
 	USBTechDevice & findDeviceByID( const QString & deviceID );
@@ -219,6 +231,12 @@ public:
 	 * Returns reference to logger.
 	 */
 	Logger * getLogger();
+
+	/**
+	 * Factory method to create a WUSB stack for given device.
+	 */
+	TI_WusbStack * createStackForDevice( const QString & deviceID );
+
 private:
 	enum TypeOfAnswerFromDevice {
 		NOP,
@@ -259,7 +277,14 @@ private:
 	 * Send query to hub for list of all connected devices.
 	 */
 	bool queryDeviceInfo();
+	/**
+	 * Send "import" message to hub to claim ownership.
+	 */
 	bool sendImportDeviceMessage( const QString & deviceID, const QString & deviceVendor,const QString & deviceProd );
+	/**
+	 * Send "unimport" message to hub to request release of device by other host.
+	 */
+	bool sendUnimportMessage( const QString & deviceID, const QString & message );
 	bool openControlConnection( int portNum );
 	int createClientSocket( const char *hostname, int localport, int peerport );
 	void startAliveTimer();

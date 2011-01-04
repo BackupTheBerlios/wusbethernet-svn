@@ -12,7 +12,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QHash>
-#include "azurewave/WusbStack.h"
+#include "TI_WusbStack.h"
 #include "USButils.h"
 
 class Logger;
@@ -23,8 +23,8 @@ public:
 		bool isValid;
 		int expectedReturnLength;
 		int endpoint;
-		WusbStack::DataTransferType dataTransfer;
-		WusbStack::DataDirectionType dataDirection;
+		TI_WusbStack::DataTransferType dataTransfer;
+		TI_WusbStack::DataDirectionType dataDirection;
 	};
 	USBdeviceInfoProducer();
 	virtual ~USBdeviceInfoProducer();

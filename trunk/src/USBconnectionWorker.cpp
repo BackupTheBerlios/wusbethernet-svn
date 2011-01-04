@@ -10,6 +10,7 @@
 #include "USButils.h"
 #include "utils/Logger.h"
 #include "BasicUtils.h"
+#include "TI_WusbStack.h"
 #include "USBdeviceInfoProducer.h"
 #include "azurewave/HubDevice.h"
 #include <QMetaType>
@@ -37,7 +38,7 @@ USBconnectionWorker::USBconnectionWorker( HubDevice * parent, USBTechDevice * de
 		qRegisterMetaType<USBconnectionWorker::WorkDoneExitCode>("USBconnectionWorker::WorkDoneExitCode");
 	USBconnectionWorker::firstInstance = false;
 
-	logger = Logger::getLogger( QString("USBConn") + QString::number(deviceRef->connectionPortNum) );
+	logger = Logger::getLogger( QString("USBConn") + QString::number( usbDeviceRef->connectionPortNum) );
 }
 
 USBconnectionWorker::~USBconnectionWorker() {
@@ -78,7 +79,8 @@ void USBconnectionWorker::queryDevice( const QHostAddress & destinationAddress, 
 void USBconnectionWorker::queryDeviceInternal() {
 	if ( logger->isDebugEnabled() )
 		logger->debug( "queryDeviceInternal");
-	stack = new WusbStack( this, destinationIP, destinationPt );
+	stack = parentDevice->createStackForDevice( usbDeviceRef->deviceID );
+//	stack = new WusbStack( this, destinationIP, destinationPt );
 	connect( stack, SIGNAL(receivedURB(const QByteArray &)), this, SLOT(receivedURB(const QByteArray &)));
 
 	bool openSuccess = stack->openConnection();

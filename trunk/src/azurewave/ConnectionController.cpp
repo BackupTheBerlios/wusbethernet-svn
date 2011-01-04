@@ -335,14 +335,21 @@ QMenu * ConnectionController::widgetItemContextMenu( QTreeWidgetItem * witem ) {
 		QMenu *menu = new QMenu;
 		currentSelectedTreeWidget = witem;
 
+		// checkout if device is currently in use by us or others
+		USBTechDevice* refUSBDevice = witem->data(0,Qt::UserRole).value<USBTechDevice*>();
+
 		QAction * menuAction = new QAction( tr("Connect"), menu );
 		connect(menuAction, SIGNAL(triggered()), this, SLOT(contextMenuAction_Connect()));
 		menuAction->setEnabled( false );
 		menu->addAction( menuAction );
 
+
 		menuAction = new QAction( tr("Disconnect"), menu );
 		connect(menuAction, SIGNAL(triggered()), this, SLOT(contextMenuAction_Disconnect()));
-		menuAction->setEnabled( false );
+		if ( refUSBDevice && refUSBDevice->isValid && refUSBDevice->status == USBTechDevice::PS_Claimed )
+			menuAction->setEnabled( true );
+		else
+			menuAction->setEnabled( false );
 		menu->addAction( menuAction );
 
 		menu->addSeparator();
@@ -381,24 +388,33 @@ void ConnectionController::contextMenuAction_Connect( ) {
 }
 
 void ConnectionController::contextMenuAction_Disconnect() {
-	logger->debug(QString::fromLatin1("Disconnect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
-	if ( currentSelectedTreeWidget ) {
-		logger->debug(QString::fromLatin1("Diconnect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
-	}
-
-	currentSelectedTreeWidget = NULL;
-
-}
-void ConnectionController::contextMenuAction_QueryDevice() {
-	logger->info( QString("ContextMenu Action = Query Device: %1").arg(
-			currentSelectedTreeWidget? currentSelectedTreeWidget->text(0) : QString("(none)") ) );
 	if ( currentSelectedTreeWidget && !currentSelectedTreeWidget->data(0,Qt::UserRole).isNull() ) {
 		USBTechDevice* refUSBDevice = currentSelectedTreeWidget->data(0,Qt::UserRole).value<USBTechDevice*>();
 		if ( refUSBDevice ) {
-			logger->info(QString("Item = '%1'  ID = %2  Hub = %3").arg(
-					currentSelectedTreeWidget->text(0),
-					refUSBDevice->deviceID,
-					refUSBDevice->parentHub->toString() ) );
+			if ( logger->isInfoEnabled() )
+				logger->info(QString("Disconnect Item = '%1'  ID = %2  Hub = %3").arg(
+						currentSelectedTreeWidget->text(0),
+						refUSBDevice->deviceID,
+						refUSBDevice->parentHub->toString() ) );
+			refUSBDevice->parentHub->disconnectDevice( refUSBDevice );
+
+		} else
+			logger->error("Context menu action on <null> device? - action aborted!");
+	} else
+		logger->error("Context menu action: cannot find corresponding tree item! - action aborted!");
+
+	currentSelectedTreeWidget = NULL;
+}
+
+void ConnectionController::contextMenuAction_QueryDevice() {
+	if ( currentSelectedTreeWidget && !currentSelectedTreeWidget->data(0,Qt::UserRole).isNull() ) {
+		USBTechDevice* refUSBDevice = currentSelectedTreeWidget->data(0,Qt::UserRole).value<USBTechDevice*>();
+		if ( refUSBDevice ) {
+			if ( logger->isInfoEnabled() )
+				logger->info(QString("Item = '%1'  ID = %2  Hub = %3").arg(
+						currentSelectedTreeWidget->text(0),
+						refUSBDevice->deviceID,
+						refUSBDevice->parentHub->toString() ) );
 			refUSBDevice->parentHub->queryDevice( refUSBDevice );
 		} else
 			logger->error("Context menu action on <null> device? - action aborted!");

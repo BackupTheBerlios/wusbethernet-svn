@@ -5,7 +5,9 @@ QT += core \
     network \
     xml \
     gui
-HEADERS += src/config.h \
+HEADERS += src/TI_USBhub.h \
+    src/TI_WusbStack.h \
+    src/config.h \
     src/AboutBox.h \
     src/utils/LogFileAppender.h \
     src/utils/LogConsoleAppender.h \

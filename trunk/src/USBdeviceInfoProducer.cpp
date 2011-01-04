@@ -46,31 +46,31 @@ QByteArray USBdeviceInfoProducer::nextURB() {
 		metaData.isValid = true;
 		metaData.expectedReturnLength = 0x12;
 		metaData.endpoint = 0;
-		metaData.dataTransfer = WusbStack::CONTROL_TRANSFER;
-		metaData.dataDirection = WusbStack::DATADIRECTION_IN;
+		metaData.dataTransfer = TI_WusbStack::CONTROL_TRANSFER;
+		metaData.dataDirection = TI_WusbStack::DATADIRECTION_IN;
 		return USButils::createGetDescriptor_Device();
 	case 1:
 		// 2. state -> send get_configuration (for retrieving the size of config section)
 		metaData.isValid = true;
 		metaData.expectedReturnLength = 0x09;
 		metaData.endpoint = 0;
-		metaData.dataTransfer = WusbStack::CONTROL_TRANSFER;
-		metaData.dataDirection = WusbStack::DATADIRECTION_IN;
+		metaData.dataTransfer = TI_WusbStack::CONTROL_TRANSFER;
+		metaData.dataDirection = TI_WusbStack::DATADIRECTION_IN;
 		return USButils::createGetDescriptor_Configuration();
 	case 2:
 		metaData.isValid = true;
 		metaData.expectedReturnLength = sizeOfConfigurationSection;
 		metaData.endpoint = 0;
-		metaData.dataTransfer = WusbStack::CONTROL_TRANSFER;
-		metaData.dataDirection = WusbStack::DATADIRECTION_IN;
+		metaData.dataTransfer = TI_WusbStack::CONTROL_TRANSFER;
+		metaData.dataDirection = TI_WusbStack::DATADIRECTION_IN;
 		return USButils::createGetDescriptor_Configuration( sizeOfConfigurationSection );
 	case 3:
 		// get language code list
 		metaData.isValid = true;
 		metaData.expectedReturnLength = 0xff;
 		metaData.endpoint = 0;
-		metaData.dataTransfer = WusbStack::CONTROL_TRANSFER;
-		metaData.dataDirection = WusbStack::DATADIRECTION_IN;
+		metaData.dataTransfer = TI_WusbStack::CONTROL_TRANSFER;
+		metaData.dataDirection = TI_WusbStack::DATADIRECTION_IN;
 		return USButils::createGetDescriptor_String( 0x0, 0x0, 0xff );
 	case 4:
 		// retrieve descriptor string

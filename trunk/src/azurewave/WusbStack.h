@@ -9,6 +9,7 @@
 #ifndef WUSBSTACK_H_
 #define WUSBSTACK_H_
 
+#include "../TI_WusbStack.h"
 #include "WusbMessageBuffer.h"
 #include <QObject>
 #include <QHostAddress>
@@ -30,27 +31,14 @@ class USBconnectionWorker;
 #define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN	24
 #define WUSB_AZUREWAVE_TIMER_INTERVAL		100
 // maximum size of one network packet (protocol/device does not support bigger packets or fragments!)
-#define WUSB_NETWORK_DEFAULT_MTU			1472
+#define WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU	1472
 
-class WusbStack : public QObject {
+class WusbStack : public TI_WusbStack {
 	Q_OBJECT
 friend class WusbReceiverThread;
 public:
-	enum DataTransferType {
-		CONTROL_TRANSFER,
-		BULK_TRANSFER,
-		INTERRUPT_TRANSFER,
-		ISOCHRONOUS_TRANSFER
-	};
-	enum DataDirectionType {
-		DATADIRECTION_IN,
-		DATADIRECTION_OUT,
-		DATADIRECTION_CONTROL,
-		DATADIRECTION_NONE
-	};
-
-	WusbStack( USBconnectionWorker *, const QHostAddress &, int );
-	~WusbStack();
+	WusbStack( Logger *parentLogger, const QHostAddress & destinationIP, int destinationPort );
+	virtual ~WusbStack();
 
 	/**
 	 * Open connection to device
@@ -95,7 +83,6 @@ public:
 			int receiveLength );
 
 
-	bool sendIdleMessage();
 	/**
 	 * Thread run loop.<br>
 	 * For technical reasons this method must be declared <em>public</em>...
@@ -111,13 +98,6 @@ public:
 private:
 	static bool isFirstInstance;
 
-	enum State {
-		STATE_DISCONNECTED,
-		STATE_CONNECTED,
-		STATE_OPENED,
-		STATE_CLOSED,
-		STATE_FAILED
-	};
 	State state;
 	QHostAddress destAddress;
 	int destPort;
@@ -153,6 +133,9 @@ private:
 	bool closeDevice();
 	const QString stateToString();
 	void stopTimer();
+
+	/** Send idle / keepalive message to device  */
+	bool sendIdleMessage();
 
 private slots:
 	/** Receive routine to read data on UDP socket. Will be called upon signal from QT socket stack. */

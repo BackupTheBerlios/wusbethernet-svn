@@ -26,21 +26,21 @@
  * On first instance some supplemental init code is needed. */
 bool WusbStack::isFirstInstance = true;
 
-WusbStack::WusbStack( USBconnectionWorker *parent, const QHostAddress & destinationAddress, int destinationPort )
-: QObject() {
+WusbStack::WusbStack( Logger *parentLogger, const QHostAddress & destinationAddress, int destinationPort )
+: TI_WusbStack() {
 	// XXX this is not threadsafe
 	if ( WusbStack::isFirstInstance ) {
 		WusbHelperLib::initPacketCounter();
 		WusbStack::isFirstInstance = false;
 	}
 
-	logger = parent->getLogger();
+	logger = parentLogger;
 	state = STATE_DISCONNECTED;
 	destAddress = QHostAddress( destinationAddress );
 	destPort = destinationPort;
 	haveAnswer = false;
 	udpSocket = NULL;
-	maxMTU = WUSB_NETWORK_DEFAULT_MTU;	// TODO make this configurable or auto detect
+	maxMTU = WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU;	// TODO make this configurable or auto detect
 	currentSendTransactionNum = -1;
 	currentReceiveTransactionNum = 0;
 	currentTransactionNum = 0xff;
