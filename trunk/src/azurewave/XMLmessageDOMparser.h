@@ -14,7 +14,8 @@
 #include <QDomDocument>
 
 class HubDevice;
-class DiscoveryMessageContent;
+class ControlMsg_DiscoveryResponse;
+class ControlMsg_UnimportRequest;
 class USBTechDevice;
 class QStringList;
 class Logger;
@@ -23,20 +24,21 @@ class XMLmessageDOMparser : public QObject {
 	Q_OBJECT
 public:
 	virtual ~XMLmessageDOMparser();
-	static DiscoveryMessageContent* parseDiscoveryMessage( const QByteArray & message );
+	static ControlMsg_DiscoveryResponse* parseDiscoveryMessage( const QByteArray & message );
 	static void parseServerInfoMessage( const QByteArray & message, HubDevice * refHubDevice );
 	static QStringList parseStatusChangedMessage( const QByteArray & message, HubDevice * refHubDevice );
 	static USBTechDevice & parseImportResponseMessage( const QByteArray & message, HubDevice * refHubDevice );
-
+	static ControlMsg_UnimportRequest* parseUnimportMessage( const QByteArray & message );
 private:
 	XMLmessageDOMparser( const QByteArray & message );
 
-	DiscoveryMessageContent* processDiscoveryMessage();
+	ControlMsg_DiscoveryResponse* processDiscoveryMessage();
 	bool processServerInfoMessage( HubDevice * refHubDevice );
 	void processServerInfoDeviceSection( HubDevice * refHubDevice, const QDomNode & deviceNode );
 	void processDeviceInterfaceElement( USBTechDevice * refUSBDevice, const QDomNode & deviceNode );
 	QStringList processStatusChangedMessage( HubDevice * refHubDevice );
 	USBTechDevice & processImportResponseMessage( HubDevice * refHubDevice );
+	ControlMsg_UnimportRequest* processUnimportRequestMessage();
 
 	int unmarshallIntValue( const QString & value, const QString & numFormat = "int", int defaultValue = -1 );
 	QString unmarshallBCDversionValue( const QString & value, const QString & defaultValue );

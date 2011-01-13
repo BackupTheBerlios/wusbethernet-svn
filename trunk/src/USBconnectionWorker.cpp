@@ -98,7 +98,7 @@ void USBconnectionWorker::queryDeviceInternal() {
 				buffer.clear();
 			}
 		}
-		busyWaiting( 2000 );
+		busyWaiting( 5000 );
 		bool closeSuccess = stack->closeConnection();
 		if ( logger->isDebugEnabled() )
 			logger->debug (QString::fromLatin1("Close Connection result = %1").arg( closeSuccess? "true": "false" ) );

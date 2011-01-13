@@ -62,27 +62,27 @@ ABSOLUTELY NO WARRANTY.</source>
 <context>
     <name>ConnectionController</name>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="338"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="345"/>
         <source>Connect</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="343"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="351"/>
         <source>Disconnect</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="350"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="361"/>
         <source>Query device info</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="360"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="375"/>
         <source>Connect all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="365"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="380"/>
         <source>Disconnect all</source>
         <translation type="unfinished"></translation>
     </message>
@@ -90,17 +90,22 @@ ABSOLUTELY NO WARRANTY.</source>
 <context>
     <name>HubDevice</name>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="459"/>
-        <source>%1 - Used by &lt;em&gt;%2&lt;/em&gt; (%3)</source>
+        <location filename="../src/azurewave/HubDevice.cpp" line="259"/>
+        <source>User on host %1 requesting access to device: &lt;br&gt;&lt;center&gt;%2&lt;/center&gt;&lt;br&gt;&lt;b&gt;Disconnect?&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="473"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="563"/>
+        <source>%1 - Used by %2 (%3)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/azurewave/HubDevice.cpp" line="577"/>
         <source>&lt;html&gt;&lt;b&gt;USB device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;%5/%6&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%7&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;%9:%10&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%11&lt;/em&gt;%12&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="507"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="611"/>
         <source>&lt;html&gt;&lt;b&gt;Device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Model: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Protocol: &lt;em&gt;%6&lt;/em&gt;&lt;br&gt;Contact: %7&lt;/html&gt;</source>
         <translation></translation>
     </message>
@@ -257,59 +262,78 @@ p, li { white-space: pre-wrap; }
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="280"/>
+        <location filename="../src/preferencesbox.ui" line="287"/>
+        <source>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:&apos;Sans Serif&apos;; font-size:9pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;table style=&quot;-qt-table-type: root; margin-top:4px; margin-bottom:4px; margin-left:4px; margin-right:4px;&quot;&gt;
+&lt;tr&gt;
+&lt;td style=&quot;border: none;&quot;&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;Include username additional to hostname &lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;in disconnect request - like &lt;span style=&quot; font-style:italic;&quot;&gt;name@host&lt;/span&gt;.&lt;/p&gt;
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;(for devices connected to different hosts)&lt;/p&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/preferencesbox.ui" line="299"/>
+        <source>Include username in disconnect request</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/preferencesbox.ui" line="305"/>
         <source>Extra / Debug</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="292"/>
+        <location filename="../src/preferencesbox.ui" line="317"/>
         <source>Write log / debug messages to console</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="295"/>
+        <location filename="../src/preferencesbox.ui" line="320"/>
         <source>Console output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="308"/>
+        <location filename="../src/preferencesbox.ui" line="333"/>
         <source>Logging:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="321"/>
+        <location filename="../src/preferencesbox.ui" line="346"/>
         <source>Write log / debug messages to file(s)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="324"/>
+        <location filename="../src/preferencesbox.ui" line="349"/>
         <source>File output</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="340"/>
+        <location filename="../src/preferencesbox.ui" line="365"/>
         <source>Directory for log files
 (will be created if not existing)
 [use / as separator!]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="345"/>
+        <location filename="../src/preferencesbox.ui" line="370"/>
         <source>/tmp/USBhubConnect/</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="361"/>
+        <location filename="../src/preferencesbox.ui" line="386"/>
         <source>Dir:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="409"/>
+        <location filename="../src/preferencesbox.ui" line="434"/>
         <source>Log level:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/preferencesbox.ui" line="422"/>
+        <location filename="../src/preferencesbox.ui" line="447"/>
         <source>Append to existing files</source>
         <translation type="unfinished"></translation>
     </message>
@@ -423,44 +447,66 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>mainFrame</name>
     <message>
-        <location filename="../src/mainframe.cpp" line="38"/>
+        <location filename="../src/mainframe.cpp" line="40"/>
         <source>&amp;Run</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="39"/>
+        <location filename="../src/mainframe.cpp" line="41"/>
         <source>Start/Stop network discovery</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="50"/>
+        <location filename="../src/mainframe.cpp" line="52"/>
         <source>&amp;Preferences</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="51"/>
+        <location filename="../src/mainframe.cpp" line="53"/>
         <source>Show/Edit preferences</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="55"/>
+        <location filename="../src/mainframe.cpp" line="57"/>
         <source>&amp;About</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="56"/>
+        <location filename="../src/mainframe.cpp" line="58"/>
         <source>About this program and help</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="60"/>
+        <location filename="../src/mainframe.cpp" line="62"/>
         <source>&amp;Quit</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="61"/>
+        <location filename="../src/mainframe.cpp" line="63"/>
         <source>Exit program</source>
         <translation></translation>
+    </message>
+    <message>
+        <location filename="../src/mainframe.cpp" line="157"/>
+        <source>: Warning</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainframe.cpp" line="162"/>
+        <source>: Error</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainframe.cpp" line="166"/>
+        <source>: Info</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainframe.cpp" line="174"/>
+        <location filename="../src/mainframe.cpp" line="176"/>
+        <location filename="../src/mainframe.cpp" line="178"/>
+        <source>: Question</source>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>

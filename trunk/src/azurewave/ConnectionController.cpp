@@ -234,6 +234,10 @@ void ConnectionController::processAnnouncementMessage( const QHostAddress & send
 
 			// creating a new HUB device stack
 			HubDevice * device = new HubDevice(sender, this );
+			// connect 'userInfo' signal
+			connect( device, SIGNAL( userInfoMessage(const QString &,const QString &,int)),
+					this, SLOT(relayUserInfoMessage(const QString &,const QString &,int)) );
+
 			QByteArray payload = bytes.right( bytes.size() - 8 );
 			device->setXMLdiscoveryData( bytes.size() -7, payload ); // submit complete payload without header
 
@@ -356,6 +360,10 @@ QMenu * ConnectionController::widgetItemContextMenu( QTreeWidgetItem * witem ) {
 
 		menuAction = new QAction( tr("Query device info"), menu );
 		connect(menuAction, SIGNAL(triggered()), this, SLOT(contextMenuAction_QueryDevice()));
+		if ( refUSBDevice && refUSBDevice->isValid && refUSBDevice->status == USBTechDevice::PS_Plugged )
+			menuAction->setEnabled( true );
+		else
+			menuAction->setEnabled( false );
 		menu->addAction( menuAction );
 
 		return menu;
@@ -422,4 +430,18 @@ void ConnectionController::contextMenuAction_QueryDevice() {
 		logger->error("Context menu action: cannot find corresponding tree item! - action aborted!");
 
 	currentSelectedTreeWidget = NULL;
+}
+
+
+void ConnectionController::relayUserInfoMessage( const QString & key, const QString & message, int answerBits ) {
+	// just relay message
+	emit userInfoMessage( key, message, answerBits );
+}
+void ConnectionController::relayUserInfoReply( const QString & key, const QString & reply, int answerBits ) {
+	// just call slot (direct call) for every hub device
+	QHashIterator<QString, HubDevice*>  it( knownDevicesByIP );
+	while ( it.hasNext() ) {
+		it.next();
+		(it.value())->userInfoReply(key,reply,answerBits);
+	}
 }

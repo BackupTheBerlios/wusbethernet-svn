@@ -41,6 +41,12 @@ public:
 	 */
 	QString toString();
 
+public slots:
+	/**
+	 * Handle reply from user to question/info.
+	 */
+	virtual void userInfoReply( const QString & key, const QString & reply, int answerBits ) = 0;
+
 };
 
 #endif /* TI_USBHUB_H_ */

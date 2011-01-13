@@ -35,6 +35,8 @@ private:
 
     Ui::mainFrameClass ui;
     void setUpToolbar();
+
+
 private slots:
 	void editPreferences();
 	void showAboutInfo();
@@ -42,6 +44,16 @@ private slots:
 	void runDiscovery();
 	void contextMenuSlot( const QPoint & );
 	void editPreferencesBoxFinished( int result );
+	/**
+	 * Receive user specific info/warning/question message from hub device
+	 */
+	void userInfoMessageSlot( const QString & key, const QString & message, int answerBits );
+
+signals:
+	/**
+	 * Signalize answer from user interaction to preceding message.
+	 */
+	void userInfoMessageReply( const QString & key, const QString & message, int answerBits );
 };
 
 #endif // MAINFRAME_H

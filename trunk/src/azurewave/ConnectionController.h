@@ -104,6 +104,21 @@ private slots:
 	void contextMenuAction_Connect();
 	void contextMenuAction_Disconnect();
 	void contextMenuAction_QueryDevice();
+
+	/**
+	 * Handle reply from user to sent question/info.
+	 * Will be signaled to every known "HubDevice" (object).
+	 */
+	void relayUserInfoReply( const QString & key, const QString & reply, int answerBits );
+	/**
+	 * Receives <tt>UserInfo</tt> signal from hub for retransmitting to higher level.
+	 */
+	void relayUserInfoMessage( const QString & key, const QString & message, int answerBits );
+signals:
+	/**
+	 * Signalize that something has happened, which requires user interaction.
+	 */
+	void userInfoMessage( const QString & key, const QString & message, int answerBits );
 };
 
 // Q_DECLARE_METATYPE( const void * )

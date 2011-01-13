@@ -14,8 +14,10 @@
 #include "ConfigManager.h"
 #include "preferencesbox.h"
 #include "AboutBox.h"
+#include "config.h"
 #include <QMessageBox>
 #include <QTimer>
+#include <QMessageBox>
 #include "QMenu"
 
 mainFrame::mainFrame(QWidget *parent)
@@ -90,6 +92,10 @@ void mainFrame::runDiscovery() {
 			cc = new ConnectionController( 1550 );
 			cc->setVisualTreeWidget( ui.treeWidget );
 			connect(ui.treeWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuSlot(const QPoint &)));
+			connect(cc, SIGNAL(userInfoMessage(const QString &,const QString &,int)),
+					this, SLOT(userInfoMessageSlot(const QString &,const QString &,int) ) );
+			connect( this, SIGNAL( userInfoMessageReply(const QString &,const QString &,int)),
+					cc, SLOT(relayUserInfoReply(const QString &,const QString &,int)) );
 		}
 		cc->start();
 
@@ -143,4 +149,34 @@ void mainFrame::editPreferencesBoxFinished( int result ) {
 		prefBoxDialog = NULL;
 	}
 
+}
+
+void mainFrame::userInfoMessageSlot( const QString & key, const QString & message, int answerBits ) {
+	if ( answerBits == -1 ) {
+		// Warning message
+		QMessageBox::warning( this, QString(PROGNAME) + tr(": Warning"), message );
+		emit userInfoMessageReply( key, message, 0 );
+	}
+	else if ( answerBits < -1 ) {
+		// Error message
+		QMessageBox::critical( this, QString(PROGNAME) + tr(": Error"), message );
+		emit userInfoMessageReply( key, message, 0 );
+	} else if ( answerBits < 2 ) {
+		// Info message
+		QMessageBox::information( this, QString(PROGNAME) + tr(": Info"), message );
+		emit userInfoMessageReply( key, message, 0 );
+	} else {
+		// Question messsage
+		// TODO define and handle answerBits better!
+		int result = 0;
+		switch (answerBits) {
+		case 2:
+			result = QMessageBox::question( this, QString(PROGNAME) + tr(": Question"), message, QMessageBox::Yes | QMessageBox::No );
+		case 3:
+			result = QMessageBox::question( this, QString(PROGNAME) + tr(": Question"), message, QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel );
+		case 4:
+			result = QMessageBox::question( this, QString(PROGNAME) + tr(": Question"), message, QMessageBox::Abort | QMessageBox::Retry );
+		}
+		emit userInfoMessageReply( key, message, result );
+	}
 }

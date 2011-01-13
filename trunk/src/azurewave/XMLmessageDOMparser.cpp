@@ -41,7 +41,7 @@ XMLmessageDOMparser::~XMLmessageDOMparser() {
 
 
 
-DiscoveryMessageContent* XMLmessageDOMparser::parseDiscoveryMessage( const QByteArray & message ) {
+ControlMsg_DiscoveryResponse* XMLmessageDOMparser::parseDiscoveryMessage( const QByteArray & message ) {
 	/*
 	 <discoverResponse>
 		<name>MedionHUB</name>
@@ -61,13 +61,13 @@ DiscoveryMessageContent* XMLmessageDOMparser::parseDiscoveryMessage( const QByte
 	return parser.processDiscoveryMessage();
 }
 
-DiscoveryMessageContent* XMLmessageDOMparser::processDiscoveryMessage() {
+ControlMsg_DiscoveryResponse* XMLmessageDOMparser::processDiscoveryMessage() {
 	if ( root.tagName() != "discoverResponse" || !root.hasChildNodes() ) {
 		errorString = tr("XML message is not of type \"discoverResponse\"!");
 		return NULL;
 	}
 
-	DiscoveryMessageContent * resultSet = new DiscoveryMessageContent();
+	ControlMsg_DiscoveryResponse * resultSet = new ControlMsg_DiscoveryResponse();
 	QString typeAtt;
 
 	QDomElement domElem = root.firstChildElement("name");
@@ -508,8 +508,52 @@ USBTechDevice & XMLmessageDOMparser::processImportResponseMessage( HubDevice * r
 }
 
 
+ControlMsg_UnimportRequest* XMLmessageDOMparser::parseUnimportMessage( const QByteArray & message ) {
+	/*
+	 * <unimport>
+	 *   <hostName>horst</hostName>
+	 *   <deviceID type="hex">00e09a81</deviceID>
+	 * </unimport>
+	 */
+	XMLmessageDOMparser parser( message );
+	// Sanity check
+	if ( !parser.success ) {
+		return NULL;
+	}
+	return parser.processUnimportRequestMessage();
+}
 
+ControlMsg_UnimportRequest* XMLmessageDOMparser::processUnimportRequestMessage() {
+	if ( root.tagName() != "unimport" || !root.hasChildNodes() ) {
+		errorString = QString("XML message is not of type \"unimport\"!");
+		return NULL;
+	}
 
+	ControlMsg_UnimportRequest * resultSet = new ControlMsg_UnimportRequest();
+	QString typeAtt;
+
+	QDomElement domElem = root.firstChildElement("hostName");
+	if ( domElem.isNull() ) {
+		errorString = QString("XML message does not contain \"hostName\" element!");
+		return NULL;
+	}
+	resultSet->hostname = domElem.text();
+
+	domElem = root.firstChildElement("deviceID");
+	if ( domElem.isNull() ) {
+		errorString = QString("XML message does not contain \"deviceID\" element!");
+		return NULL;
+	}
+	resultSet->deviceID = domElem.text();
+
+	domElem = root.firstChildElement("message");
+	if ( !domElem.isNull() ) {
+		resultSet->message = domElem.text();
+	} else
+		resultSet->message = QString::null;
+
+	return resultSet;
+}
 
 /* **********************  some utility methods ****************** */
 

@@ -27,13 +27,24 @@ class QTreeWidgetItem;
 class QTreeWidget;
 class Logger;
 
-struct DiscoveryMessageContent {
+/**
+ * Content of message from discovery process: <tt>discoveryResponse</tt>
+ */
+struct ControlMsg_DiscoveryResponse {
 	QString name;
 	QString hwid;
 	int pid;
 	int vid;
 };
 
+/**
+ * Content of message from control channel: <tt>unimport</tt>
+ */
+struct ControlMsg_UnimportRequest {
+	QString hostname;
+	QString deviceID;
+	QString message;
+};
 
 /**
  * Represents the "interface" setting/configuration for an USB device.<br>
@@ -294,11 +305,21 @@ private:
 	void setToolTipText();
 	void refreshAllWidgetItemForDevice();
 	void queryDeviceJob(USBTechDevice & deviceRef);
-private slots:
+public slots:
 	void sendAliveRequest();
 	void readControlConnectionMessage();
 	void notifyControlConnectionError(QAbstractSocket::SocketError socketError);
 	void connectionWorkerJobDone( USBconnectionWorker::WorkDoneExitCode, USBTechDevice* );
+	/**
+	 * Handle reply from user to question/info.
+	 */
+	virtual void userInfoReply( const QString & key, const QString & reply, int answerBits );
+
+signals:
+	/**
+	 * Signalize that something has happened, which requires user interaction.
+	 */
+	void userInfoMessage( const QString & key, const QString & message, int answerBits );
 };
 
 #endif /* HUBDEVICE_H_ */

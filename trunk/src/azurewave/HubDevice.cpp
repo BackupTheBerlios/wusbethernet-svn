@@ -100,9 +100,10 @@ TI_WusbStack * HubDevice::createStackForDevice( const QString & deviceID ) {
 
 
 void HubDevice::setXMLdiscoveryData( int len, const QByteArray & payloadData ) {
-	DiscoveryMessageContent *parseResult = XMLmessageDOMparser::parseDiscoveryMessage( payloadData );
+	ControlMsg_DiscoveryResponse *parseResult = XMLmessageDOMparser::parseDiscoveryMessage( payloadData );
 	if ( parseResult ) {
 		name = parseResult->name;
+		delete parseResult;
 	} else {
 		logger->error( "Hub device: Could not parse discovery message from network!" );
 		alive = false;
@@ -242,10 +243,24 @@ void HubDevice::receiveData( ControlMessageBuffer::TypeOfMessage type, const QBy
 		break;
 	}	// brackets are needed to keep compiler happy...
 	case ControlMessageBuffer::TOM_UNIMPORT:
-		// (should be an outgoing message!) - BUT message never seen so far...
-		//  "unimport" is normaly done by closing the device on data channel...
+		// This is an outgoing AND incoming message!
+		//  Message is send/received to signal a "release device" request
+		// If a claimed-by-us device should be "unimported":
+		// this is normaly done by closing the device on data channel...
+		// -> Receive of this message should pop up a message box
 		lastSeenTimestamp = time(0);
-		logger->debug( "UnImportInfo" );
+		if ( bytes.length() > 10 ) {
+			ControlMsg_UnimportRequest * unimportMsg = XMLmessageDOMparser::parseUnimportMessage( bytes );
+			if ( unimportMsg ) {
+				if ( logger->isDebugEnabled() )
+					logger->debug( QString("UnImportInfo from host: %1 for device %2").
+							arg( unimportMsg->hostname, unimportMsg->deviceID )  );
+				emit userInfoMessage( "unimport",
+						tr("User on host %1 requesting access to device: <br><center>%2</center><br><b>Disconnect?</b>").
+						arg( unimportMsg->hostname, unimportMsg->deviceID ), 2 );
+				delete unimportMsg;
+			}
+		}
 		break;
 	case ControlMessageBuffer::TOM_STATUSCHANGED:
 	{
@@ -403,6 +418,7 @@ bool HubDevice::sendUnimportMessage( const QString & deviceID, const QString & m
 	QString str = QString("<unimport>"
 			"<hostName>%1</hostName>"
 			"<deviceID type=\"hex\">%2</deviceID>"
+			"<message>blubba</message>"
 			"</unimport>").arg(
 					hostname,
 					deviceID );
@@ -749,4 +765,9 @@ void HubDevice::connectionWorkerJobDone( USBconnectionWorker::WorkDoneExitCode e
 			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::WorkDoneExitCode)) );
 	delete deviceRef.connWorker;
 */
+}
+
+
+void HubDevice::userInfoReply(QString const& key, QString const& message, int replyBits ) {
+
 }
