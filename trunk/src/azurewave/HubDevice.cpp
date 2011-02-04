@@ -1,4 +1,4 @@
-/*
+/**
  * HubDevice.cpp
  *
  * @author:		Sebastian Kolbe-Nusser &lt;Sebastian DOT Kolbe AT gmail DOT com&gt;
@@ -53,9 +53,9 @@ HubDevice::HubDevice( const QHostAddress & address, ConnectionController * contr
 	alive = false;	// initial value
 	aliveTimer = NULL;
 	controlConnectionSocket = NULL;
-	bytesToReadFromNetwork = 0;
 
 	controlConnectionPortNum = DEFAULT_DEVICE_CONTROL_PORT;	// TODO port number configurable?!
+	aliveTimerInterval = DEFAULT_DEVICE_CONTROL_ALIVE_INTERVAL;	// TODO alive timer interval configurable!
 	receiveBuffer = new ControlMessageBuffer( this );
 
 	for ( int i = 0; i < 10; i++ ) {
@@ -117,7 +117,7 @@ void HubDevice::setXMLdiscoveryData( int len, const QByteArray & payloadData ) {
 void HubDevice::startAliveTimer() {
 	aliveTimer = new QTimer(this);
 	connect(aliveTimer, SIGNAL(timeout()), this, SLOT(sendAliveRequest()));
-	aliveTimer->start(3000);
+	aliveTimer->start( aliveTimerInterval );
 }
 
 bool HubDevice::openControlConnection( int portNum ) {
@@ -282,7 +282,7 @@ void HubDevice::receiveData( ControlMessageBuffer::TypeOfMessage type, const QBy
 
 
 void HubDevice::notifyControlConnectionError( QAbstractSocket::SocketError socketError ) {
-	aliveTimer->stop();
+//	aliveTimer->stop();
 	alive = false;
 	if ( controlConnectionSocket ) {
 		logger->warn(QString::fromLatin1("SocketError: %1").arg(controlConnectionSocket->errorString()) );
@@ -351,7 +351,7 @@ bool HubDevice::sendImportDeviceMessage( const QString & deviceID, const QString
 
 	if ( logger->isInfoEnabled() )
 		logger->info( QString("Sending import request for device: %1 (%2/%3) on host: %4").arg(
-				deviceID, deviceVendor, deviceProd,
+				deviceID, vendorID, prodID,
 				ConfigManager::getInstance().getStringValue("hostname","localhost") ) );
 
 	// The XML fragment to send to USB hub
@@ -362,7 +362,7 @@ bool HubDevice::sendImportDeviceMessage( const QString & deviceID, const QString
 			"<idProduct type=\"hex\">%4</idProduct>"
 			"</import>").arg(
 					ConfigManager::getInstance().getStringValue("hostname","localhost"),
-					deviceID, deviceVendor, deviceProd
+					deviceID, vendorID, prodID
 					);
 	QByteArray buffer;
 	// First: create header 66 66 65 00 00 10 3c 67 [..]
@@ -455,7 +455,8 @@ void HubDevice::sendAliveRequest() {
 		if ( errorCounter > 3 )
 			return;
 		else {
-			logger->warn( "Connection to hub lost - trying reconnect..." );
+			logger->warn( QString("Connection to hub lost - trying reconnect... (error counter = %1)").arg(
+					QString::number(errorCounter) ) );
 			if ( !openControlConnection( controlConnectionPortNum ) ) {
 				logger->warn( QString("Reconnect failed (%1. try)").arg( QString::number(errorCounter) ) );
 				return;
@@ -556,6 +557,10 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 		subClassID = usbDevice.interfaceList[0].if_subClass;
 	}
 	QString claimedText = "";	// Tooltip text (part of)
+	QString usageHintText = ""; // Tooltip text for usage warning
+	if ( usbDevice.usageHint != 0 ) {
+		usageHintText = tr("<br><b>Warning:</b> Usage possible limited");
+	}
 	if ( usbDevice.status == USBTechDevice::PS_Claimed ) {
 		claimedText = QString("<br>Claimed by: <em>%1 (%2)</em>").arg( usbDevice.claimedByName, usbDevice.claimedByIP );
 		// text to display in tree widget (right to check box)
@@ -569,7 +574,10 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 			usbDevice.visualTreeWidgetItem->setCheckState( 0, Qt::Unchecked );
 		}
 	} else {
-		usbDevice.visualTreeWidgetItem->setBackgroundColor( 0, QColor( Qt::white) );
+		if ( usbDevice.usageHint == 0 )
+			usbDevice.visualTreeWidgetItem->setBackgroundColor( 0, QColor( Qt::white) );
+		else
+			usbDevice.visualTreeWidgetItem->setBackgroundColor( 0, QColor( Qt::lightGray ) );
 		usbDevice.visualTreeWidgetItem->setCheckState( 0, Qt::Unchecked );
 		usbDevice.visualTreeWidgetItem->setText(0, usbDevice.product );
 	}
@@ -578,16 +586,17 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 			"Manufacturer: <em>%2</em><br>"
 			"Connected port: <em>%3</em><br>"
 			"ID: <em>%4</em><br>"
-			"Vendor/Product: <em>%5/%6</em><br>"
+			"Vendor/Product: <em>0x%5/0x%6</em><br>"
 			"Version: <em>%7</em><br>"
 			"USB type: <em>%8</em><br>"
 			"USB class: <em>%9:%10</em><br>"
-			"Num. interfaces: <em>%11</em>%12</html>").
+			"Num. interfaces: <em>%11</em>%12%13</html>").
 			arg( usbDevice.product, usbDevice.manufacturer, QString::number(usbDevice.portNum),
 					usbDevice.deviceID, QString::number(usbDevice.idVendor, 16),
 					QString::number(usbDevice.idProduct, 16), usbDevice.sbcdDevice, usbDevice.sbcdUSB,
 					QString::number(classID,16) ).arg(QString::number(subClassID,16 ),
-							QString::number( usbDevice.interfaceList.size()), claimedText) );
+							QString::number( usbDevice.interfaceList.size()), claimedText,
+							usageHintText ) );
 	return usbDevice.visualTreeWidgetItem;
 }
 

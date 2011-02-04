@@ -17,7 +17,8 @@
 #include <QList>
 #include <QHostAddress>
 
-#define DEFAULT_DEVICE_CONTROL_PORT 21827
+#define DEFAULT_DEVICE_CONTROL_PORT				21827
+#define DEFAULT_DEVICE_CONTROL_ALIVE_INTERVAL	3000
 
 class QTimer;
 class QByteArray;
@@ -94,6 +95,7 @@ public:
 		lastOperationErrorCode = -1;
 		connectionPortNum = -1;
 		nextJobID = -1;
+		usageHint = 0;
 	}
 
 	/** State of device */
@@ -186,6 +188,8 @@ public:
 	QString manufacturer;
 	/** product name (as given in configuration section) */
 	QString product;
+	/** Usage hint from newer firmware (> 1.0.18) */
+	int usageHint;
 };
 
 Q_DECLARE_METATYPE( USBTechDevice* )
@@ -249,39 +253,51 @@ public:
 	TI_WusbStack * createStackForDevice( const QString & deviceID );
 
 private:
-	enum TypeOfAnswerFromDevice {
-		NOP,
-		ALIVE,
-		SERVERINFO,
-		STATUSCHANGED,
-		IMPORTINFO
-	};
+	/** Value from discovery reply: Name of device */
 	QString name;
+	/** Value from server info: used protocol */
 	QString protocol;
+	/** Value from server info: manufacturer of device */
 	QString manufacturer;
+	/** Value from server info: model name of device */
 	QString modelName;
+	/** Value from server info: name of device (should be same as <tt>name</tt>...) */
 	QString deviceName;
+	/** Value from server info: version of firmware */
 	QString firmwareVersion;
+	/** Value from server info: date of firmware */
 	QString firmwareDate;
+	/** List of all reported / connected devices on hub */
 	QList<USBTechDevice*> deviceList;
 
+	/** IP address of this device in network */
 	QHostAddress ipAddress;
+	/** Reference to ConnectionController (parent) */
 	ConnectionController *refController;
+	/** Timestamp: last contact with device */
 	long int lastSeenTimestamp;
+	/** Status: Is Device alive? */
 	bool alive;
+	/** Configuration value for control connection port at hub */
 	int controlConnectionPortNum;
+	/** Configuration value for alive timer interval */
+	int aliveTimerInterval;
+	/** Flag from message processing: Request server info at next feasible time */
 	bool wantServerInfoRequest;
+	/** Counter for error conditions on control channel */
 	int errorCounter;
+	/** Device number, set from constructor. [not used yet] */
 	int deviceNumber;
 
-	int bytesToReadFromNetwork;
-	QByteArray *bufferReadFromNetwork;
-	TypeOfAnswerFromDevice messageTypeFromNetwork;
-
+	/** Timer to send alive requests at regular interval (see <tt>aliveTimerInterval</tt>) */
 	QTimer *aliveTimer;
+	/** control connection socket */
 	QTcpSocket *controlConnectionSocket;
+	/** Reference to receive buffer */
 	ControlMessageBuffer *receiveBuffer;
+	/** Reference to tree widget item for visualization */
 	QTreeWidgetItem * visualTreeWidgetItem;
+	/** Reference to logger */
 	Logger * logger;
 
 	/**

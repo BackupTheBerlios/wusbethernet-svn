@@ -95,17 +95,22 @@ ABSOLUTELY NO WARRANTY.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="563"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="562"/>
+        <source>&lt;br&gt;&lt;b&gt;Warning:&lt;/b&gt; Usage possible limited</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/azurewave/HubDevice.cpp" line="568"/>
         <source>%1 - Used by %2 (%3)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="577"/>
-        <source>&lt;html&gt;&lt;b&gt;USB device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;%5/%6&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%7&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;%9:%10&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%11&lt;/em&gt;%12&lt;/html&gt;</source>
+        <location filename="../src/azurewave/HubDevice.cpp" line="585"/>
+        <source>&lt;html&gt;&lt;b&gt;USB device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;0x%5/0x%6&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%7&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;%9:%10&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%11&lt;/em&gt;%12%13&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="611"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="620"/>
         <source>&lt;html&gt;&lt;b&gt;Device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Model: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Protocol: &lt;em&gt;%6&lt;/em&gt;&lt;br&gt;Contact: %7&lt;/html&gt;</source>
         <translation></translation>
     </message>
@@ -419,27 +424,27 @@ p, li { white-space: pre-wrap; }
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="329"/>
+        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="338"/>
         <source>ServerInfo XML message: interface section without &quot;interfaceNumber&quot; tag!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="398"/>
+        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="407"/>
         <source>StatusChanged XML message is not of type &quot;devStatusChanged&quot;!</source>
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="473"/>
+        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="482"/>
         <source>ImportResponse XML message is not of type &quot;importResponse&quot;!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="494"/>
+        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="503"/>
         <source>ImportResponse XML message: no section &quot;errorCode&quot; contained!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="502"/>
+        <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="511"/>
         <source>ImportResponse XML message: no section &quot;port&quot; contained!</source>
         <translation type="unfinished"></translation>
     </message>

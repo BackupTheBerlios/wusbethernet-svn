@@ -229,9 +229,18 @@ void XMLmessageDOMparser::processServerInfoDeviceSection( HubDevice * refHubDevi
 
 	if ( port < 0 || port > 9 ) return;	// ??? should not occur???
 
+
 	USBTechDevice * USBdev = refHubDevice->deviceList[port];
 	USBdev->isValid = true;
 	USBdev->portNum = port;
+
+	// Special feature since firmware 1.0.21(?): give client software a hint about usage of device
+	domElem = deviceNode.firstChildElement("use_isoc");
+	if ( !domElem.isNull() ) {
+		// this tag is optional
+		typeAtt = domElem.attribute("type", "int");
+		USBdev->usageHint = unmarshallIntValue( domElem.text(), typeAtt, 0 );
+	}
 
 	domElem = deviceNode.firstChildElement("product");
 	if ( !domElem.isNull() )

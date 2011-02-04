@@ -1,4 +1,4 @@
-/*
+/**
  * ConnectionController.cpp
  *
  * @author		Sebastian Kolbe-Nusser &lt;Sebastian DOT Kolbe AT gmail DOT com&gt;
