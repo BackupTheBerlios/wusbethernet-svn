@@ -12,7 +12,7 @@
 #include "USBinfoTablesLID.cpp"
 
 // init static variables
-USBinfoTables::USBinfoTables * USBinfoTables::singletonInst = NULL;
+USBinfoTables * USBinfoTables::singletonInst = NULL;
 
 /**
  * Init tables
