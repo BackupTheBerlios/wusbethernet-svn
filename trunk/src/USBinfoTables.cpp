@@ -58,7 +58,7 @@ const QString USBinfoTables::getLanguageByID( unsigned short lid, const QString 
 		return defaultVal;
 }
 
-const QString USBinfoTables::getClassDescriptionByClassID( unsigned char cid, const QString & defaultVal ) {
+const QString USBinfoTables::getClassDescriptionByClassID( uint8_t cid, const QString & defaultVal ) {
 	if ( classIDmap.contains( cid ) )
 		return classIDmap.value( cid, defaultVal );
 	else
@@ -66,7 +66,7 @@ const QString USBinfoTables::getClassDescriptionByClassID( unsigned char cid, co
 
 }
 const QString USBinfoTables::getDeviceDescriptionByClassSubclassAndProtocol(
-		unsigned char cid, unsigned char sid, unsigned char protoId, const QString & defaultVal ) {
+		uint8_t cid, uint8_t sid, uint8_t protoId, const QString & defaultVal ) {
 
 	int key = (protoId & 0xff);
 	key |= ((sid << 8) & 0xff00);

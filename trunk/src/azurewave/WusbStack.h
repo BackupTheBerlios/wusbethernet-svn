@@ -63,7 +63,7 @@ public:
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
 	bool sendURB( const char * urbData, int urbDataLen,
-			DataTransferType dataTransferType, DataDirectionType directionType,
+			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			int endpoint,
 			int receiveLength );
 	/**
@@ -78,7 +78,7 @@ public:
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
 	bool sendURB( const QByteArray & urbData,
-			DataTransferType dataTransferType, DataDirectionType directionType,
+			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			int endpoint,
 			int receiveLength );
 
@@ -98,7 +98,7 @@ public:
 private:
 	static bool isFirstInstance;
 
-	State state;
+	eStackState state;
 	QHostAddress destAddress;
 	int destPort;
 	QUdpSocket *udpSocket;

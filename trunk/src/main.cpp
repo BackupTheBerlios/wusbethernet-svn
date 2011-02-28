@@ -20,10 +20,13 @@
 #include <sys/sysinfo.h>
 
 
+/** Global flag: Application should run (and is not yet terminated) */
+bool applicationShouldRun(true);
+
 /** Initializes the logging infrastructure */
 void initLogger( ConfigManager & conf ) {
 	Logger *l = Logger::getLogger();
-	Logger::LogLevel loglevel = Logger::LOGLEVEL_INFO;
+	Logger::eLogLevel loglevel = Logger::LOGLEVEL_INFO;
 	int confLoglevel = conf.getIntValue("main.logging.loglevel", 1 );
 	switch( confLoglevel ) {
 	case 0:
@@ -127,6 +130,10 @@ void initLogger( ConfigManager & conf ) {
 	l->addConsoleAppender();
 	l->addFileAppender("HUB_5.log", enableLogfileAppend);
 
+	l = Logger::getLogger("VHCI");
+	l->setLogLevel( loglevel );
+	l->addConsoleAppender();
+	l->addFileAppender("VHCI.log", enableLogfileAppend);
 }
 
 /**
@@ -206,14 +213,14 @@ int main( int argc, char *argv[] ) {
     	printf("Cannot load translation files for locale: %s\n", locale.toUtf8().data() );
 
     // Load main window - and core application
-	mainFrame *mf = new mainFrame();
-	mf->show();
+	mainFrame mf;
+	mf.show();
 
     // quit window event
-    QObject::connect(qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()));
+    QObject::connect( qApp, SIGNAL(lastWindowClosed()), qApp, SLOT(quit()) );
+    QObject::connect( qApp, SIGNAL(aboutToQuit()), &mf, SLOT(cleanUpAllStuff()) );
 
-    // Start event processing and wait
+    // Start event processing and wait for exit
     int res = app.exec();
-    Logger::closeAllLogger();
     return res;
 }

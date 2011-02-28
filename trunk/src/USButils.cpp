@@ -111,8 +111,8 @@ void USButils::decodeConfigurationSectionComplete(
 
 	USButils::UsbInterfaceDescriptor *currentInterfaceDescriptor;
 	USButils::UsbEndpointDescriptor  *currentEndpointDescriptor;
-	unsigned char lengthOfPacket = bytes[0];
-	unsigned char typeOfPacket = bytes[1];
+	uint8_t lengthOfPacket = bytes[0];
+	uint8_t typeOfPacket = bytes[1];
 	bool done = false;
 	int offset = 0;
 	bool isFirst = true, haveEndPtDS = false;
@@ -177,7 +177,7 @@ void USButils::decodeConfigurationSectionComplete(
 			USButils::UsbSupplementalDescriptor *dt = new USButils::UsbSupplementalDescriptor();
 			dt->bType = typeOfPacket;
 			dt->bLength = lengthOfPacket;
-			dt->data = new unsigned char[lengthOfPacket +1];
+			dt->data = new uint8_t[lengthOfPacket +1];
 			::memcpy( dt->data, bytes.data(), lengthOfPacket );
 			dt->data[lengthOfPacket] = 0;
 			if ( lastDecodedDescriptorType == 0x04 ) {
@@ -223,7 +223,7 @@ USButils::UsbInterfaceDescriptor * USButils::decodeInterfaceSection( const QByte
 
 USButils::UsbEndpointDescriptor * USButils::decodeEndpointSection( const QByteArray & bytes, int offset ) {
 	USButils::UsbEndpointDescriptor *retVal = new USButils::UsbEndpointDescriptor;
-	unsigned char lengthOfPacket = bytes[ 0 + offset ];
+	uint8_t lengthOfPacket = bytes[ 0 + offset ];
 	retVal->bLength = lengthOfPacket;
 	retVal->bEndpointAddress = bytes[2+offset];
 	retVal->bmAttributes = bytes[3+offset];
@@ -250,10 +250,10 @@ int USButils::getConfigsectionLengthFromURB( const QByteArray & bytes ) {
 
 
 void USButils::decodeUsbAudioInterfaceDescriptor( const QByteArray & bytes, int offset, USButils::UsbInterfaceDescriptor * refInterface ) {
-	unsigned char subClassInterface = refInterface->bInterfaceSubClass;
-	unsigned char descriptorLen     = bytes[ offset ];
-	unsigned char descriptorType    = bytes[ 1 + offset ];
-	unsigned char descriptorSubType = bytes[ 2 + offset ];
+	uint8_t subClassInterface = refInterface->bInterfaceSubClass;
+	uint8_t descriptorLen     = bytes[ offset ];
+	uint8_t descriptorType    = bytes[ 1 + offset ];
+	uint8_t descriptorSubType = bytes[ 2 + offset ];
 	switch ( subClassInterface ) {
 	case 0x01: {
 		// Audio control interface
@@ -341,7 +341,7 @@ void USButils::decodeUsbAudioInterfaceDescriptor( const QByteArray & bytes, int 
 			USButils::UsbSupplementalDescriptor *dt = new USButils::UsbSupplementalDescriptor();
 			dt->bType = descriptorType;
 			dt->bLength = descriptorLen;
-			dt->data = new unsigned char[descriptorLen +1];
+			dt->data = new uint8_t[descriptorLen +1];
 			::memcpy( dt->data, bytes.data(), descriptorLen );
 			dt->data[descriptorLen] = 0;
 			refInterface->listInterfaceSupplementalDescriptors.append( dt );
@@ -356,7 +356,7 @@ void USButils::decodeUsbAudioInterfaceDescriptor( const QByteArray & bytes, int 
 		USButils::UsbSupplementalDescriptor *dt = new USButils::UsbSupplementalDescriptor();
 		dt->bType = descriptorType;
 		dt->bLength = descriptorLen;
-		dt->data = new unsigned char[descriptorLen +1];
+		dt->data = new uint8_t[descriptorLen +1];
 		::memcpy( dt->data, bytes.data(), descriptorLen );
 		dt->data[descriptorLen] = 0;
 		refInterface->listInterfaceSupplementalDescriptors.append( dt );
@@ -372,7 +372,7 @@ void USButils::decodeUsbAudioInterfaceHeader(
 	dt.bInCollection = bytes[ 7 + offset ];
 	// fill dynamic length interface association values
 	for ( int i = 8; i < dt.bLength; i++ ) {
-		unsigned char baInterfaceNr = bytes[ i + offset ];
+		uint8_t baInterfaceNr = bytes[ i + offset ];
 		dt.listBaInterfaceNr << baInterfaceNr;
 	}
 }
@@ -408,7 +408,7 @@ void USButils::decodeUsbAudioTerminalDescription_Selector  (
 }
 void USButils::decodeUsbAudioTerminalDescription_Feature   (
 		const QByteArray & bytes, int offset, USButils::UsbAudioFeatureTerminalDescriptor & dt ) {
-	unsigned char len = bytes[ offset ];
+	uint8_t len = bytes[ offset ];
 	dt.bUnitID = bytes[ 3 + offset ];
 	dt.bSourceID = bytes[ 4 + offset ];
 	dt.bControlSize = bytes[ 5 + offset ];
@@ -461,9 +461,20 @@ QString USButils::decodeStringDescriptor( const QByteArray & bytes ) {
 }
 
 
+short USButils::decodeBCDToShort( const QString & sBCDstring ) {
+	if ( sBCDstring.isNull() || sBCDstring.length() < 4 ) return (short) 0;
+	short retValue = (short) 0;
+	bool isOK(true);
 
+	int iValue = sBCDstring.left(2).toInt( &isOK );
+	if ( !isOK ) return (short) 0;
+	retValue |= (iValue << 8);
+	iValue = sBCDstring.mid(2,2).toInt( &isOK );
+	if ( !isOK ) return (short) 0;
+	retValue |= (iValue);
+}
 
-unsigned short USButils::bytesToShort( unsigned char byteLSB, unsigned char byteMSB ) {
+unsigned short USButils::bytesToShort( uint8_t byteLSB, uint8_t byteMSB ) {
 	unsigned short sh = 0;
 	sh |= byteLSB;
 	sh |= ((byteMSB << 8) & 0xff00);

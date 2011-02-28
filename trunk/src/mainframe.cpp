@@ -15,10 +15,14 @@
 #include "preferencesbox.h"
 #include "AboutBox.h"
 #include "config.h"
+#include "utils/Logger.h"
+#include "vhci/LinuxVHCIconnector.h"
 #include <QMessageBox>
 #include <QTimer>
 #include <QMessageBox>
 #include "QMenu"
+
+extern bool applicationShouldRun;
 
 mainFrame::mainFrame(QWidget *parent)
     : QMainWindow(parent)
@@ -79,9 +83,14 @@ void mainFrame::editPreferences() {
 void mainFrame::showAboutInfo() {
 	// About-Button
 	// create a new instance of aboutbox and show it
-	AboutBox *aboutbox = new AboutBox(this);
+/*	AboutBox *aboutbox = new AboutBox(this);
 	aboutbox->setAttribute( Qt::WA_DeleteOnClose );
 	aboutbox->show();
+*/
+	LinuxVHCIconnector * vhciConn = LinuxVHCIconnector::getInstance();
+	vhciConn->openKernelInterface();
+	vhciConn->startWork();
+	vhciConn->connectDevice(NULL);
 }
 
 void mainFrame::runDiscovery() {
@@ -91,7 +100,10 @@ void mainFrame::runDiscovery() {
 		if ( !cc ) {
 			cc = new ConnectionController( 1550 );
 			cc->setVisualTreeWidget( ui.treeWidget );
+
 			connect(ui.treeWidget, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(contextMenuSlot(const QPoint &)));
+			connect(ui.treeWidget, SIGNAL(itemClicked( QTreeWidgetItem*, int )), this, SLOT( treeItemClicked(QTreeWidgetItem*, int)));
+
 			connect(cc, SIGNAL(userInfoMessage(const QString &,const QString &,int)),
 					this, SLOT(userInfoMessageSlot(const QString &,const QString &,int) ) );
 			connect( this, SIGNAL( userInfoMessageReply(const QString &,const QString &,int)),
@@ -136,6 +148,15 @@ void mainFrame::contextMenuSlot( const QPoint & pos ) {
 	}
 }
 
+
+void mainFrame::treeItemClicked( QTreeWidgetItem * item, int column ) {
+	if ( item->parent() ) {
+		printf("treeItemClicked\n");
+		// XXX process event in ConnectionController
+	}
+}
+
+
 void mainFrame::editPreferencesBoxFinished( int result ) {
 	if ( prefBoxDialog ) {
 		if ( result == 1 ) {
@@ -155,16 +176,15 @@ void mainFrame::userInfoMessageSlot( const QString & key, const QString & messag
 	if ( answerBits == -1 ) {
 		// Warning message
 		QMessageBox::warning( this, QString(PROGNAME) + tr(": Warning"), message );
-		emit userInfoMessageReply( key, message, 0 );
-	}
-	else if ( answerBits < -1 ) {
+		// no answer needed/reasonable for error and info messages!
+	} else if ( answerBits < -1 ) {
 		// Error message
 		QMessageBox::critical( this, QString(PROGNAME) + tr(": Error"), message );
-		emit userInfoMessageReply( key, message, 0 );
+		// no answer needed/reasonable for error and info messages!
 	} else if ( answerBits < 2 ) {
 		// Info message
 		QMessageBox::information( this, QString(PROGNAME) + tr(": Info"), message );
-		emit userInfoMessageReply( key, message, 0 );
+		// no answer needed/reasonable for error and info messages!
 	} else {
 		// Question messsage
 		// TODO define and handle answerBits better!
@@ -179,4 +199,18 @@ void mainFrame::userInfoMessageSlot( const QString & key, const QString & messag
 		}
 		emit userInfoMessageReply( key, message, result );
 	}
+}
+
+void mainFrame::cleanUpAllStuff() {
+	applicationShouldRun = false;
+	//
+	Logger::getLogger()->info("Exiting application...");
+
+	// close usb-vhci interface
+	delete ( LinuxVHCIconnector::getInstance() );
+
+    delete &(ConfigManager::getInstance());
+
+    // finalize logger
+    Logger::closeAllLogger();
 }

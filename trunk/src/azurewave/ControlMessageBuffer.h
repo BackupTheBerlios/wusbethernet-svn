@@ -20,7 +20,7 @@ class Logger;
 class ControlMessageBuffer {
 public:
 	/** Type of message given by header (read from network) */
-	enum TypeOfMessage {
+	enum eTypeOfMessage {
 		TOM_NOP = 0,
 		TOM_ALIVE,
 		TOM_SERVERINFO,
@@ -42,13 +42,13 @@ private:
 	HubDevice * recipientForData;
 	QByteArray * internalBuffer;
 	int bytesLeftInCurrentTask;
-	TypeOfMessage currentMessageTask;
+	eTypeOfMessage currentMessageTask;
 
-	TypeOfMessage getTypeOfMessage( const QByteArray & bytes );
+	eTypeOfMessage getTypeOfMessage( const QByteArray & bytes );
 	int getLengthOfMessage( const QByteArray & bytes );
 	void retrieveMessageLengthAndType();
 	QString messageToString( const QByteArray & bytes, int lengthToPrint = 6 );
-	QString typeOfMessageToString( ControlMessageBuffer::TypeOfMessage type );
+	QString typeOfMessageToString( ControlMessageBuffer::eTypeOfMessage type );
 };
 
 #endif /* CONTROLMESSAGEBUFFER_H_ */

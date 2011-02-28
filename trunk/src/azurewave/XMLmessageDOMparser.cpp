@@ -255,7 +255,7 @@ void XMLmessageDOMparser::processServerInfoDeviceSection( HubDevice * refHubDevi
 	domElem = deviceNode.firstChildElement("status");
 	if ( !domElem.isNull() ) {
 		QString statusText = domElem.text();
-		USBdev->status = (USBTechDevice::PlugStatus) interpretPlugStatus( statusText );
+		USBdev->status = (USBTechDevice::ePlugStatus) interpretPlugStatus( statusText );
 	} else
 		USBdev->status = USBTechDevice::PS_NotAvailable;
 
@@ -424,7 +424,7 @@ QStringList XMLmessageDOMparser::processStatusChangedMessage( HubDevice * refHub
 
 				subElem = domElem.firstChildElement("status");
 				QString statusText = subElem.text();
-				hUSBDev.status = (USBTechDevice::PlugStatus) interpretPlugStatus( statusText );
+				hUSBDev.status = (USBTechDevice::ePlugStatus) interpretPlugStatus( statusText );
 				if ( hUSBDev.status == USBTechDevice::PS_Claimed ) {
 					subElem = domElem.firstChildElement("hostName");
 					if ( !subElem.isNull() ) {

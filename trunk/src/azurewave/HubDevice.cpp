@@ -199,7 +199,7 @@ void HubDevice::readControlConnectionMessage() {
 	receiveBuffer->receive( bytesRead );
 }
 
-void HubDevice::receiveData( ControlMessageBuffer::TypeOfMessage type, const QByteArray & bytes ) {
+void HubDevice::receiveData( ControlMessageBuffer::eTypeOfMessage type, const QByteArray & bytes ) {
 	QString recData;
 	if ( type != ControlMessageBuffer::TOM_NOP )
 		errorCounter = 0;
@@ -559,7 +559,7 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 	QString claimedText = "";	// Tooltip text (part of)
 	QString usageHintText = ""; // Tooltip text for usage warning
 	if ( usbDevice.usageHint != 0 ) {
-		usageHintText = tr("<br><b>Warning:</b> Usage possible limited");
+		usageHintText = tr("<b><i>Warning:</i> <font color=\"red\">Usage maybe degraded</font></b><br>");
 	}
 	if ( usbDevice.status == USBTechDevice::PS_Claimed ) {
 		claimedText = QString("<br>Claimed by: <em>%1 (%2)</em>").arg( usbDevice.claimedByName, usbDevice.claimedByIP );
@@ -582,21 +582,20 @@ QTreeWidgetItem * HubDevice::getQTreeWidgetItemForDevice( USBTechDevice & usbDev
 		usbDevice.visualTreeWidgetItem->setText(0, usbDevice.product );
 	}
 	usbDevice.visualTreeWidgetItem->setToolTip(0,
-			tr("<html><b>USB device: <em>%1</em></b><br>"
-			"Manufacturer: <em>%2</em><br>"
-			"Connected port: <em>%3</em><br>"
-			"ID: <em>%4</em><br>"
-			"Vendor/Product: <em>0x%5/0x%6</em><br>"
-			"Version: <em>%7</em><br>"
-			"USB type: <em>%8</em><br>"
-			"USB class: <em>%9:%10</em><br>"
-			"Num. interfaces: <em>%11</em>%12%13</html>").
-			arg( usbDevice.product, usbDevice.manufacturer, QString::number(usbDevice.portNum),
+			tr("<html>%1<b>USB device: <em>%2</em></b><br>"
+			"Manufacturer: <em>%3</em><br>"
+			"Connected port: <em>%4</em><br>"
+			"ID: <em>%5</em><br>"
+			"Vendor/Product: <em>0x%6/0x%7</em><br>"
+			"Version: <em>%8</em><br>"
+			"USB type: <em>%9</em><br>"
+			"USB class: <em>0x%10:0x%11</em><br>"
+			"Num. interfaces: <em>%12</em>%13</html>").
+			arg( usageHintText, usbDevice.product, usbDevice.manufacturer, QString::number(usbDevice.portNum),
 					usbDevice.deviceID, QString::number(usbDevice.idVendor, 16),
-					QString::number(usbDevice.idProduct, 16), usbDevice.sbcdDevice, usbDevice.sbcdUSB,
-					QString::number(classID,16) ).arg(QString::number(subClassID,16 ),
-							QString::number( usbDevice.interfaceList.size()), claimedText,
-							usageHintText ) );
+					QString::number(usbDevice.idProduct, 16), usbDevice.sbcdDevice, usbDevice.sbcdUSB ).
+					arg(QString::number(classID,16), QString::number(subClassID,16 ),
+							QString::number( usbDevice.interfaceList.size()), claimedText ) );
 	return usbDevice.visualTreeWidgetItem;
 }
 
@@ -728,8 +727,8 @@ void HubDevice::queryDeviceJob( USBTechDevice & deviceRef ) {
 	}
 	if ( !deviceRef.connWorker )
 		deviceRef.connWorker = new USBconnectionWorker( this, &deviceRef );
-	connect( deviceRef.connWorker, SIGNAL(workIsDone(USBconnectionWorker::WorkDoneExitCode, USBTechDevice*)),
-			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::WorkDoneExitCode, USBTechDevice*)), Qt::QueuedConnection );
+	connect( deviceRef.connWorker, SIGNAL(workIsDone(USBconnectionWorker::eWorkDoneExitCode, USBTechDevice*)),
+			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::eWorkDoneExitCode, USBTechDevice*)), Qt::QueuedConnection );
 	deviceRef.connWorker->queryDevice( QHostAddress(ipAddress), deviceRef.connectionPortNum );
 	deviceRef.nextJobID = 0;
 }
@@ -739,14 +738,14 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ||
 			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
 		logger->warn( QString("Disconnect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
-				deviceRef->isValid? QString("true") : QString("false"),
-				deviceRef->owned? QString("true") : QString("false"),
+				(deviceRef->isValid? QString("true") : QString("false")),
+				(deviceRef->owned? QString("true") : QString("false")),
 				QString::number( (int) deviceRef->status )
 		) );
 		return;
 	}
 	if ( deviceRef->status == USBTechDevice::PS_Claimed && deviceRef->owned ) {
-		// TODO Device is claimed by us -> need to implement disconnect
+		// TODO Device is claimed by us -> need to implement disconnect procedure!
 		logger->warn( QString("Sorry: Device disconnect not implemented yet...") );
 	} else if ( deviceRef->status == USBTechDevice::PS_Claimed && !deviceRef->owned ) {
 		// send "unimport" message to hub
@@ -757,8 +756,21 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	}
 }
 
+void connectDevice( USBTechDevice * deviceRef ) {
+	if ( ! deviceRef ) return;
+	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Plugged ||
+			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
+		logger->warn( QString("Disconnect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
+				(deviceRef->isValid? QString("true") : QString("false")),
+				(deviceRef->owned? QString("true") : QString("false")),
+				QString::number( (int) deviceRef->status )
+		) );
+		return;
+	}
 
-void HubDevice::connectionWorkerJobDone( USBconnectionWorker::WorkDoneExitCode exitCode, USBTechDevice * deviceRef ) {
+}
+
+void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode exitCode, USBTechDevice * deviceRef ) {
 	if ( logger->isDebugEnabled() )
 		logger->debug("JobDone Slot");
 	const QString & resultString = deviceRef->connWorker->getResultString();

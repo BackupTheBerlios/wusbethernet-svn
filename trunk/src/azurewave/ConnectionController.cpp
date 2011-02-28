@@ -8,10 +8,12 @@
 #include "ConnectionController.h"
 #include "../ConfigManager.h"
 #include "../BasicUtils.h"
+#include "../vhci/LinuxVHCIconnector.h"
 #include <QtNetwork>
 #include <QtGui>
 #include <QString>
 #include <QHash>
+#include <stdint.h>
 
 ConnectionController::ConnectionController( int portNum, QObject *parent )
 : QObject( parent ) {
@@ -54,7 +56,20 @@ void ConnectionController::start() {
 		logger->error( QString::fromLatin1("Cannot open UDP socket on ports %1 to %2 - Giving up!").
 				arg( QString::number(configSocketPortNum), QString::number(socketPortNum)) );
 		return;
+	} else if ( logger->isInfoEnabled() ) {
+		socketPortNum--;
+		QString str = "[";
+		QListIterator<QHostAddress> itSendAddr( discoverySendAddresses );
+		while( itSendAddr.hasNext() ) {
+			if ( itSendAddr.hasPrevious() )
+				str += ", ";
+			str += itSendAddr.next().toString();
+		}
+		str += "]";
+		logger->info( QString::fromLatin1("Starting AzureWave/Medion device discovery on UDP %1 (local %2) with interval %3ms. Send to IP: %4")
+		.arg(QString::number(remoteDiscoveryPortNum), QString::number(socketPortNum), QString::number(timerIntervall), str ) );
 	}
+
 
 	broadcastTimer = new QTimer(this);
 	connect(broadcastTimer, SIGNAL(timeout()), this, SLOT(sendDiscoveryAnnouncement()));
@@ -107,6 +122,8 @@ bool ConnectionController::openSocket() {
 void ConnectionController::retrieveAllDiscoveryAddresses() {
 	ConfigManager & confMgr = ConfigManager::getInstance();
 	int discoveryTypeConf = confMgr.getIntValue( "azurewave.discovery.type", 1 );
+	discoverySendAddresses.clear();	// empty list
+
 	switch( discoveryTypeConf ) {
 	case 0:
 		// broadcast to global network (255.255.255.255)
@@ -166,11 +183,6 @@ void ConnectionController::retrieveAllDiscoveryAddresses() {
 	// fallback...
 	if ( discoverySendAddresses.isEmpty() )
 		discoverySendAddresses.append( QHostAddress::Broadcast );
-
-	QListIterator<QHostAddress> itSendAddr( discoverySendAddresses );
-	while( itSendAddr.hasNext() ) {
-		logger->debug( QString::fromLatin1("Azurewave discovery address: %1").arg( itSendAddr.next().toString() ) );
-	}
 }
 
 
@@ -251,36 +263,36 @@ void ConnectionController::processAnnouncementMessage( const QHostAddress & send
 bool ConnectionController::checkDiscoveryMessageAnswerHeader( const QByteArray & bytes ) {
 	if ( bytes.size() < 10 ) return false;
 	// Answer: 01 03(==TAN) 00 00 03 e9 00 00
-	char byte1  = bytes[0];
+	uint8_t byte1  = bytes[0];
 	// XXX don't know why sometimes 0x00 and othertimes 0x01 is returned from hub
 	if ( byte1 != 0x01 && byte1 != 0x0 ) {
 		return false;
 	}
-	unsigned char byte2 = (unsigned char) bytes[1];
+	uint8_t byte2 = (uint8_t) bytes[1];
 	if ( byte2 != currentTan ) {
 		return false;
 	}
-	char byte3  = bytes[2];
+	uint8_t byte3  = bytes[2];
 	if ( byte3 != 0x00 ) {
 		return false;
 	}
-	char byte4 = bytes[3];
+	uint8_t byte4 = bytes[3];
 	if ( byte4 != 0x00 ) {
 		return false;
 	}
 
-	char byte5 = bytes[4];
+	uint8_t byte5 = bytes[4];
 	if ( byte5 != 0x03 ) {
 		return false;
 	}
-	unsigned char byte6 = bytes[5];
-	if ( byte6 != (unsigned char) 0xe9 ) {
+	uint8_t byte6 = bytes[5];
+	if ( byte6 != (uint8_t) 0xe9 ) {
 		return false;
 	}
 
-	char byte7  = bytes[6];
+	uint8_t byte7  = bytes[6];
 	if ( byte7 != 0x00 ) return false;
-	char byte8 = bytes[7];
+	uint8_t byte8 = bytes[7];
 	if ( byte8 != 0x00 ) return false;
 
 	return true;
@@ -295,7 +307,7 @@ QByteArray * ConnectionController::createDiscoveryMessage( short tan ) {
 	buffer->append('\0');
 
 	if ( tan > 0xff ) tan = 0xff; // just to be sure...
-	buffer->append( (char) tan );
+	buffer->append( (uint8_t) tan );
 
 	buffer->append( 0x03 );
 	buffer->append( 0xe9 );
@@ -344,7 +356,10 @@ QMenu * ConnectionController::widgetItemContextMenu( QTreeWidgetItem * witem ) {
 
 		QAction * menuAction = new QAction( tr("Connect"), menu );
 		connect(menuAction, SIGNAL(triggered()), this, SLOT(contextMenuAction_Connect()));
-		menuAction->setEnabled( false );
+		if ( refUSBDevice && refUSBDevice->isValid && refUSBDevice->status == USBTechDevice::PS_Claimed )
+			menuAction->setEnabled( false );
+		else
+			menuAction->setEnabled( true );
 		menu->addAction( menuAction );
 
 
@@ -387,10 +402,21 @@ QMenu * ConnectionController::widgetItemContextMenu( QTreeWidgetItem * witem ) {
 }
 
 void ConnectionController::contextMenuAction_Connect( ) {
-//	printf("contextMenu Action = Connect\n" );
-	if ( currentSelectedTreeWidget ) {
-		logger->debug(QString::fromLatin1("Connect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
-	}
+	if ( currentSelectedTreeWidget && !currentSelectedTreeWidget->data(0,Qt::UserRole).isNull() ) {
+		USBTechDevice* refUSBDevice = currentSelectedTreeWidget->data(0,Qt::UserRole).value<USBTechDevice*>();
+		if ( refUSBDevice ) {
+			LinuxVHCIconnector * connector = LinuxVHCIconnector::getInstance();
+			if ( !connector->openKernelInterface() ) {
+				logger->warn(QString::fromLatin1( "OS interface not available!" ) );
+				emit userInfoMessage( "none", tr("Cannot connect device: OS interface not available!" ), -2 );
+			} else {
+				logger->info(QString::fromLatin1("Connect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
+				refUSBDevice->parentHub->connectDevice( refUSBDevice );
+			}
+		} else
+			logger->error("Internal error: Context menu action on <null> device? - action aborted!");
+	} else
+		logger->error("Internal error: Context menu action: cannot find corresponding tree item! - action aborted!");
 
 	currentSelectedTreeWidget = NULL;
 }
@@ -407,9 +433,9 @@ void ConnectionController::contextMenuAction_Disconnect() {
 			refUSBDevice->parentHub->disconnectDevice( refUSBDevice );
 
 		} else
-			logger->error("Context menu action on <null> device? - action aborted!");
+			logger->error("Internal error: Context menu action on <null> device? - action aborted!");
 	} else
-		logger->error("Context menu action: cannot find corresponding tree item! - action aborted!");
+		logger->error("Internal error: Context menu action: cannot find corresponding tree item! - action aborted!");
 
 	currentSelectedTreeWidget = NULL;
 }

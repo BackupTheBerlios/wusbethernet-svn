@@ -35,7 +35,7 @@ USBconnectionWorker::USBconnectionWorker( HubDevice * parent, USBTechDevice * de
 	deviceQueryEngine = NULL;
 	// If this is first time use of this class, we have to register the exitcode enum for signaling
 	if ( USBconnectionWorker::firstInstance )
-		qRegisterMetaType<USBconnectionWorker::WorkDoneExitCode>("USBconnectionWorker::WorkDoneExitCode");
+		qRegisterMetaType<USBconnectionWorker::eWorkDoneExitCode>("USBconnectionWorker::WorkDoneExitCode");
 	USBconnectionWorker::firstInstance = false;
 
 	logger = Logger::getLogger( QString("USBConn") + QString::number( usbDeviceRef->connectionPortNum) );
@@ -57,7 +57,7 @@ const QString & USBconnectionWorker::getResultString() {
 	return resultString;
 }
 
-USBconnectionWorker::WorkDoneExitCode USBconnectionWorker::getLastExitCode() {
+USBconnectionWorker::eWorkDoneExitCode USBconnectionWorker::getLastExitCode() {
 	return lastExitCode;
 }
 

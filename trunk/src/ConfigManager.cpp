@@ -21,8 +21,7 @@ ConfigManager::ConfigManager() {
 	debugPrintout();
 }
 
-ConfigManager::ConfigManager(const ConfigManager & inst) {
-}
+// ConfigManager::ConfigManager(const ConfigManager & inst) {}
 
 ConfigManager::~ConfigManager() {
 	instance = NULL;

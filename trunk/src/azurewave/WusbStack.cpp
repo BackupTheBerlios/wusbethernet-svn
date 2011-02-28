@@ -53,8 +53,8 @@ WusbStack::WusbStack( Logger *parentLogger, const QHostAddress & destinationAddr
 	// init receive message buffer
 	messageBuffer = new WusbMessageBuffer( this );
 
-	connect( messageBuffer, SIGNAL(statusMessage(WusbMessageBuffer::TypeOfMessage)),
-			this, SLOT(processStatusMessage(WusbMessageBuffer::TypeOfMessage)), Qt::QueuedConnection );
+	connect( messageBuffer, SIGNAL(statusMessage(WusbMessageBuffer::eTypeOfMessage)),
+			this, SLOT(processStatusMessage(WusbMessageBuffer::eTypeOfMessage)), Qt::QueuedConnection );
 	connect( messageBuffer, SIGNAL(urbMessage( QByteArray * )),
 			this, SLOT(processURBmessage( QByteArray * )), Qt::QueuedConnection );
 	connect( messageBuffer, SIGNAL(informPacketMeta( int, int, int )),
@@ -255,8 +255,8 @@ void WusbStack::timerInterrupt() {
 bool WusbStack::sendURB(
 		const char * urbData,
 		int urbDataLen,
-		DataTransferType dataTransferType,
-		DataDirectionType directionType,
+		eDataTransferType dataTransferType,
+		eDataDirectionType directionType,
 		int endpoint,
 		int receiveLength  ) {
 
@@ -266,7 +266,7 @@ bool WusbStack::sendURB(
 	return sendURB( urbBytes, dataTransferType, directionType, endpoint, receiveLength );
 }
 
-bool WusbStack::sendURB( const QByteArray & urbData, DataTransferType dataTransferType, DataDirectionType directionType, int endpoint, int receiveLength ) {
+bool WusbStack::sendURB( const QByteArray & urbData, eDataTransferType dataTransferType, eDataDirectionType directionType, int endpoint, int receiveLength ) {
 	int packetLen =	urbData.length() + WUSB_AZUREWAVE_SEND_HEADER_LEN;	// +28 bytes header
 	// TODO check if packetLen exceeds MTU size and split packet eventually
 

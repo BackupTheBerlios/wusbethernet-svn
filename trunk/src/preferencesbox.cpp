@@ -11,7 +11,6 @@ PreferencesBox::PreferencesBox(QWidget *parent)
 
 PreferencesBox::~PreferencesBox()
 {
-
 }
 
 void PreferencesBox::okButtonSlot() {

@@ -13,6 +13,7 @@
 #include <QByteArray>
 #include <QList>
 #include <QString>
+#include <stdint.h>
 
 #define USB_DEFAULT_LANGUAGE_CODE	(0x0409);	// default language: english (en_US)
 
@@ -25,72 +26,72 @@ public:
 		virtual ~UsbSupplementalDescriptor() {
 			if ( data ) delete data;
 		};
-		unsigned char  bLength;
-		unsigned char  bType;
-		unsigned char* data;
+		uint8_t  bLength;
+		uint8_t  bType;
+		uint8_t* data;
 	};
 	// Audio-Interface Descriptor (header)
 	struct UsbAudioInterfaceDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x01
+		uint8_t  bDescriptorSubtype;	// 0x01
 		unsigned short bcdADC;
 		unsigned short wTotalLength;
-		unsigned char  bInCollection;
-		QList<unsigned char> listBaInterfaceNr;
+		uint8_t  bInCollection;
+		QList<uint8_t> listBaInterfaceNr;
 	};
 	// Audio-Interface Input-Terminal descriptor
 	struct UsbAudioInputTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x02
-		unsigned char  bTerminalID;
+		uint8_t  bDescriptorSubtype;	// 0x02
+		uint8_t  bTerminalID;
 		unsigned short wTerminalType;
-		unsigned char  bAssocTerminal;
-		unsigned char  bNrChannels;
+		uint8_t  bAssocTerminal;
+		uint8_t  bNrChannels;
 		unsigned short wChannelConfig;
-		unsigned char  iChannelNames;
-		unsigned char  iTerminal;
+		uint8_t  iChannelNames;
+		uint8_t  iTerminal;
 	};
 	// Audio-Interface Input-Terminal descriptor
 	struct UsbAudioOutputTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x03
-		unsigned char  bTerminalID;
+		uint8_t  bDescriptorSubtype;	// 0x03
+		uint8_t  bTerminalID;
 		unsigned short wTerminalType;
-		unsigned char  bAssocTerminal;
-		unsigned char  bSourceID;
-		unsigned char  iTerminal;
+		uint8_t  bAssocTerminal;
+		uint8_t  bSourceID;
+		uint8_t  iTerminal;
 	};
 	// Audio-Interface Mixer-Unit Terminal descriptor
 	struct UsbAudioMixerTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x04
-		unsigned char  bUnitID;
+		uint8_t  bDescriptorSubtype;	// 0x04
+		uint8_t  bUnitID;
 		// TODO
 	};
 	// Audio-Interface Selector-Unit Terminal descriptor
 	struct UsbAudioSelectorTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x05
-		unsigned char  bUnitID;
+		uint8_t  bDescriptorSubtype;	// 0x05
+		uint8_t  bUnitID;
 		// TODO
 
 	};
 	// Audio-Interface Feature-Unit Terminal descriptor
 	struct UsbAudioFeatureTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x06
-		unsigned char  bUnitID;
-		unsigned char  bSourceID;
-		unsigned char  bControlSize;
+		uint8_t  bDescriptorSubtype;	// 0x06
+		uint8_t  bUnitID;
+		uint8_t  bSourceID;
+		uint8_t  bControlSize;
 		unsigned int   bmaControls0;
 		QList<unsigned int> listBmaControls;
-		unsigned char  iFeature;
+		uint8_t  iFeature;
 	};
 	// Audio-Interface Processing-Unit Terminal descriptor
 	struct UsbAudioProcessingTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x07
-		unsigned char  bUnitID;
+		uint8_t  bDescriptorSubtype;	// 0x07
+		uint8_t  bUnitID;
 		// TODO
 
 	};
 	// Audio-Interface Extension-Unit Terminal descriptor
 	struct UsbAudioExtensionTerminalDescriptor : public UsbSupplementalDescriptor {
-		unsigned char  bDescriptorSubtype;	// 0x08
-		unsigned char  bUnitID;
+		uint8_t  bDescriptorSubtype;	// 0x08
+		uint8_t  bUnitID;
 		// TODO
 	};
 
@@ -102,13 +103,13 @@ public:
 				delete listEndpointDescriptors[i];
 			listEndpointDescriptors.clear();
 		};
-		unsigned char  bLength;
-		unsigned char  bEndpointAddress;
-		unsigned char  bmAttributes;
+		uint8_t  bLength;
+		uint8_t  bEndpointAddress;
+		uint8_t  bmAttributes;
 		unsigned short wMaxPacketSize;
-		unsigned char  bInterval;
-		unsigned char  bRefresh;
-		unsigned char  bSynchAddress;
+		uint8_t  bInterval;
+		uint8_t  bRefresh;
+		uint8_t  bSynchAddress;
 		QList<UsbSupplementalDescriptor*> listEndpointDescriptors;
 	};
 
@@ -121,13 +122,13 @@ public:
 			listEndpoints.clear();
 			listInterfaceSupplementalDescriptors.clear();
 		};
-		unsigned char  bInterfaceNumber;
-		unsigned char  bAlternateSetting;
-		unsigned char  bNumEndpoints;
-		unsigned char  bInterfaceClass;
-		unsigned char  bInterfaceSubClass;
-		unsigned char  bInterfaceProtocol;
-		unsigned char  iInterface;
+		uint8_t  bInterfaceNumber;
+		uint8_t  bAlternateSetting;
+		uint8_t  bNumEndpoints;
+		uint8_t  bInterfaceClass;
+		uint8_t  bInterfaceSubClass;
+		uint8_t  bInterfaceProtocol;
+		uint8_t  iInterface;
 		QString sInterface;
 		QList<UsbEndpointDescriptor*> listEndpoints;
 		QList<UsbSupplementalDescriptor*> listInterfaceSupplementalDescriptors;
@@ -140,27 +141,27 @@ public:
 			listInterface.clear();
 		};
 		unsigned short totalLength;
-		unsigned char  bNumInterfaces;
-		unsigned char  bConfigurationValue;
-		unsigned char  iConfiguration;
-		unsigned char  bmAttributes;
-		unsigned char  bMaxPower;
+		uint8_t  bNumInterfaces;
+		uint8_t  bConfigurationValue;
+		uint8_t  iConfiguration;
+		uint8_t  bmAttributes;
+		uint8_t  bMaxPower;
 		QString sConfig;
 		QList<UsbInterfaceDescriptor*> listInterface;
 	};
 	struct UsbDeviceDescriptor {
 		unsigned short bcdUSB;
-		unsigned char bDeviceClass;
-		unsigned char bDeviceSubClass;
-		unsigned char bDeviceProtocol;
-		unsigned char bMaxPacketSize;
+		uint8_t bDeviceClass;
+		uint8_t bDeviceSubClass;
+		uint8_t bDeviceProtocol;
+		uint8_t bMaxPacketSize;
 		unsigned short idVendor;
 		unsigned short idProduct;
 		unsigned short bcdDevice;
-		unsigned char iManufactor;
-		unsigned char iProduct;
-		unsigned char iSerialNumber;
-		unsigned char bNumConfigurations;
+		uint8_t iManufactor;
+		uint8_t iProduct;
+		uint8_t iSerialNumber;
+		uint8_t bNumConfigurations;
 		QString sVendor;
 		QString sManufactor;
 		QString sProduct;
@@ -184,8 +185,12 @@ public:
 	static USButils::UsbEndpointDescriptor *decodeEndpointSection( const QByteArray & bytes, int offset );
 	static QString decodeStringDescriptor( const QByteArray & bytes );
 	static void decodeUsbAudioInterfaceDescriptor           ( const QByteArray & bytes, int offset, USButils::UsbInterfaceDescriptor * refInterface );
+
+	/** Decodes a BCD string to a short value */
+	static short decodeBCDToShort( const QString & sBCDstring );
+
 private:
-	static inline unsigned short bytesToShort( unsigned char byteLSB, unsigned char byteMSB );
+	static inline unsigned short bytesToShort( uint8_t byteLSB, uint8_t byteMSB );
 	static void decodeUsbAudioInterfaceHeader               ( const QByteArray & bytes, int offset, USButils::UsbAudioInterfaceDescriptor & dt );
 	static void decodeUsbAudioTerminalDescription_Input     ( const QByteArray & bytes, int offset, USButils::UsbAudioInputTerminalDescriptor & dt );
 	static void decodeUsbAudioTerminalDescription_Output    ( const QByteArray & bytes, int offset, USButils::UsbAudioOutputTerminalDescriptor & dt );

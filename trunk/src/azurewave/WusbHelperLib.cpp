@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <QMutexLocker>
 #include <QString>
+#include <stdint.h>
 #include <time.h>
 
 // init static variables
@@ -33,12 +34,12 @@ unsigned int WusbHelperLib::getIncrementedPacketCounter() {
 }
 
 void WusbHelperLib::appendTransactionHeader( QByteArray & buffer, int sendTAN, int recTAN, int tanCount ) {
-	buffer.append( (unsigned char) sendTAN );
-	buffer.append( (unsigned char) recTAN );
+	buffer.append( (uint8_t) sendTAN );
+	buffer.append( (uint8_t) recTAN );
 	buffer.append( 0x10 );
-	buffer.append( (unsigned char) tanCount );
+	buffer.append( (uint8_t) tanCount );
 }
-void WusbHelperLib::appendMarker55Header( QByteArray & buffer, unsigned char sendFlag ) {
+void WusbHelperLib::appendMarker55Header( QByteArray & buffer, uint8_t sendFlag ) {
 	buffer.append( 0x55 );
 	buffer.append( 0x55 );
 	buffer.append( '\0' );
@@ -67,7 +68,7 @@ QString WusbHelperLib::messageToString( const QByteArray & bytes, int lengthToPr
 	QString str( lengthToPrint * 2 + lengthToPrint -1, ' ' );
 	int pointer = 0;
 	for ( int i = 0; i < lengthToPrint && i < bytes.length(); i++ ) {
-		unsigned char c = bytes[i];
+		uint8_t c = bytes[i];
 		if ( c <= 0x0f ) {
 			// fill with '0' if number < 0x0f
 			str.replace( pointer, 1, "0" );
@@ -78,12 +79,12 @@ QString WusbHelperLib::messageToString( const QByteArray & bytes, int lengthToPr
 	}
 	return str;
 }
-QString WusbHelperLib::messageToString( const unsigned char* bytes, int lengthToPrint ) {
+QString WusbHelperLib::messageToString( const uint8_t* bytes, int lengthToPrint ) {
 	if ( ! bytes ) return QString("null");
 	QString str( lengthToPrint * 2 + lengthToPrint -1, ' ' );
 	int pointer = 0;
 	for ( int i = 0; i < lengthToPrint; i++ ) {
-		unsigned char c = bytes[i];
+		uint8_t c = bytes[i];
 		if ( c <= 0x0f ) {
 			// fill with '0' if number < 0x0f
 			str.replace( pointer, 1, "0" );

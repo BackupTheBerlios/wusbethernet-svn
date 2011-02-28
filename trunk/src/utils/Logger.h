@@ -19,7 +19,7 @@ class LogAppender;
 
 class Logger {
 public:
-	enum LogLevel {
+	enum eLogLevel {
 		LOGLEVEL_ERROR = 0,
 		LOGLEVEL_WARN,
 		LOGLEVEL_INFO,
@@ -68,7 +68,7 @@ public:
 	void error( const QString &text );
 
 	/** Sets the new loglevel to given value */
-	void setLogLevel( LogLevel level );
+	void setLogLevel( eLogLevel level );
 	/** Adds a console appender to logger */
 	void addConsoleAppender();
 	/** Adds a file appender with specified filename in default directory to logger */
@@ -87,7 +87,7 @@ private:
 	static QString dateFormat;
 	static QString logEntryTemplate;
 	QString name;
-	LogLevel logLevel;
+	eLogLevel logLevel;
 	/** List of appenders */
 	QList<LogAppender*> listAppenders;
 	/** Thread mutex to protect simulanous usage */
@@ -98,10 +98,10 @@ private:
 	/** Constructor with name of logger */
 	Logger( const QString & name );
 	/** Write <tt>text</tt> to all available appenders */
-	void log( LogLevel level, const QString & text );
+	void log( eLogLevel level, const QString & text );
 
 	/** Convert given log level to string */
-	QString logLevelToString( LogLevel level );
+	QString logLevelToString( eLogLevel level );
 };
 
 #endif /* LOGGER_H_ */

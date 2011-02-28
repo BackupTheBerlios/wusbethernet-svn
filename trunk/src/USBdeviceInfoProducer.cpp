@@ -446,7 +446,7 @@ QString USBdeviceInfoProducer::bcdToString( unsigned short bcdValue ) {
 	return s;
 }
 
-const QString USBdeviceInfoProducer::endpointAttributesToString( unsigned char bmAttributes ) {
+const QString USBdeviceInfoProducer::endpointAttributesToString( uint8_t bmAttributes ) {
 	if ( bmAttributes == 0 ) return QString("none");
 	int code = (bmAttributes & 0x03);
 	QString retVal = QString();

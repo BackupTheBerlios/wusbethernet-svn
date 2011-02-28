@@ -142,7 +142,7 @@ void Logger::error( const QString &text ) {
 	log( LOGLEVEL_ERROR, text );
 }
 
-void Logger::log( LogLevel level, const QString & text ) {
+void Logger::log( eLogLevel level, const QString & text ) {
 //	printf("log! level=%i/%i listAppenders.size=%i text=%s\n", level, logLevel, listAppenders.size(),
 //			text.toUtf8().data() );
 	if ( level <= logLevel && !listAppenders.isEmpty() ) {
@@ -159,7 +159,7 @@ void Logger::log( LogLevel level, const QString & text ) {
 	}
 }
 
-QString Logger::logLevelToString( LogLevel level ) {
+QString Logger::logLevelToString( eLogLevel level ) {
 	switch ( level ) {
 	case LOGLEVEL_DEBUG:
 		return QString("DEBUG");
@@ -175,7 +175,7 @@ QString Logger::logLevelToString( LogLevel level ) {
 	return "UNKNOWN";
 }
 
-void Logger::setLogLevel( LogLevel level ) {
+void Logger::setLogLevel( eLogLevel level ) {
 	logLevel = level;
 }
 void Logger::addConsoleAppender() {

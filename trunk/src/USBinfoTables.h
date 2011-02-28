@@ -11,6 +11,7 @@
 
 #include <QMap>
 #include <QString>
+#include <stdint.h>
 
 class USBinfoTables {
 public:
@@ -20,9 +21,9 @@ public:
 
 	const QString getVendorByID( unsigned short vid, const QString & defaultVal = "n/a" );
 	const QString getLanguageByID( unsigned short lid, const QString & defaultVal = "en_US" );
-	const QString getClassDescriptionByClassID( unsigned char cid, const QString & defaultVal = "n/a" );
+	const QString getClassDescriptionByClassID( uint8_t cid, const QString & defaultVal = "n/a" );
 	const QString getDeviceDescriptionByClassSubclassAndProtocol(
-			unsigned char cid, unsigned char sid, unsigned char protoId, const QString & defaultVal = "n/a" );
+			uint8_t cid, uint8_t sid, uint8_t protoId, const QString & defaultVal = "n/a" );
 	const QString getAudioTerminalTypeDescriptionByID( unsigned short wTerminalType, const QString & defaultVal = "n/a" );
 	const QString audioFeatureMapToString( int bmaControl );
 private:
@@ -30,7 +31,7 @@ private:
 	static USBinfoTables * singletonInst;
 	QMap<unsigned short,QString> vendorIDmap;
 	QMap<unsigned short,QString> languageIDmap;
-	QMap<unsigned char,QString> classIDmap;
+	QMap<uint8_t,QString> classIDmap;
 	QMap<int,QString> extendedClassIDmap;
 	QMap<unsigned short,QString> usbAudioTerminalTypesMap;
 

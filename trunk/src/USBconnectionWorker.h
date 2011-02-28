@@ -25,7 +25,7 @@ class USBconnectionWorker : public QThread {
 friend class WusbStack;
 public:
 	/** Exitcode of worker thread */
-	enum WorkDoneExitCode {
+	enum eWorkDoneExitCode {
 		WORK_DONE_STILL_RUNNING,
 		WORK_DONE_SUCCESS,
 		WORK_DONE_FAILED,
@@ -55,7 +55,7 @@ public:
 	 * Return exit code of last operation. If an operation (thread) is still running,
 	 * <tt>WORK_DONE_NOT_STILL_RUNNING</tt> is returned;
 	 */
-	WorkDoneExitCode getLastExitCode();
+	eWorkDoneExitCode getLastExitCode();
 
 	/**
 	 * Thread run loop.<br>
@@ -70,14 +70,11 @@ protected:
 	Logger * getLogger();
 
 private:
-	enum JobType {
+	enum eJobType {
 		JOBTYPE_NOWORK,
 		JOBTYPE_QUERY_DEVICE
 	};
-	/** Some URBs used to query device */
-	enum URBType {
-		URB_DEVICE_DESCRIPTOR
-	};
+
 	USBTechDevice * usbDeviceRef;
 	HubDevice * parentDevice;
 	/** Flag if thread is currently running */
@@ -85,8 +82,8 @@ private:
 	/** Storage for resulting string of an operation */
 	QString resultString;
 	/** Last exit code of job */
-	WorkDoneExitCode lastExitCode;
-	JobType currentJob;
+	eWorkDoneExitCode lastExitCode;
+	eJobType currentJob;
 
 	QByteArray buffer;
 	TI_WusbStack *stack;
@@ -106,7 +103,7 @@ private:
 private slots:
 	void receivedURB( const QByteArray &);
 signals:
-	void workIsDone(USBconnectionWorker::WorkDoneExitCode,USBTechDevice *);
+	void workIsDone(USBconnectionWorker::eWorkDoneExitCode,USBTechDevice *);
 
 };
 

@@ -1,0 +1,1 @@
+KERNEL=="usb-vhci",		MODE="0660",GROUP="plugdev"

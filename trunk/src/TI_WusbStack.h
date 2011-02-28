@@ -17,19 +17,19 @@
 class TI_WusbStack : public QObject {
 	Q_OBJECT
 public:
-	enum DataTransferType {
+	enum eDataTransferType {
 		CONTROL_TRANSFER,
 		BULK_TRANSFER,
 		INTERRUPT_TRANSFER,
 		ISOCHRONOUS_TRANSFER
 	};
-	enum DataDirectionType {
+	enum eDataDirectionType {
 		DATADIRECTION_IN,
 		DATADIRECTION_OUT,
 		DATADIRECTION_CONTROL,
 		DATADIRECTION_NONE
 	};
-	enum State {
+	enum eStackState {
 		STATE_DISCONNECTED,
 		STATE_CONNECTED,
 		STATE_OPENED,
@@ -64,7 +64,7 @@ public:
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
 	virtual bool sendURB( const char * urbData, int urbDataLen,
-			DataTransferType dataTransferType, DataDirectionType directionType,
+			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			int endpoint,
 			int receiveLength ) = 0;
 	/**
@@ -79,7 +79,7 @@ public:
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
 	virtual bool sendURB( const QByteArray & urbData,
-			DataTransferType dataTransferType, DataDirectionType directionType,
+			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			int endpoint,
 			int receiveLength ) = 0;
 

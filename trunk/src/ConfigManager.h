@@ -65,7 +65,8 @@ private:
 	static ConfigManager * instance;
 	Logger * logger;
 	ConfigManager();
-	ConfigManager(const ConfigManager & inst);
+	// copy constructor needs to be private
+	ConfigManager(const ConfigManager &) {};
 
 	void loadStatic();
 	void debugPrintout();

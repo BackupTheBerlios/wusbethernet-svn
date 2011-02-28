@@ -11,6 +11,7 @@
 
 #include <QByteArray>
 #include <QMutex>
+#include <stdint.h>
 
 class QString;
 
@@ -22,7 +23,7 @@ public:
 	static unsigned int getIncrementedPacketCounter();
 
 	static void appendTransactionHeader( QByteArray & buffer, int sendTAN, int recTAN, int tanCount );
-	static void appendMarker55Header( QByteArray & buffer, unsigned char sendFlag = '\0' );
+	static void appendMarker55Header( QByteArray & buffer, uint8_t sendFlag = '\0' );
 	static void appendPacketCountHeader( QByteArray & buffer );
 	static void appendPacketLength( QByteArray & buffer, unsigned int lenValue );
 
@@ -30,7 +31,7 @@ public:
 	/** Debug function: Print at most <em>length</em> bytes in hex notation into result string. */
 	static QString messageToString( const QByteArray & bytes, int lengthToPrint = 4 );
 	/** Debug function: Print at most <em>length</em> bytes in hex notation into result string. */
-	static QString messageToString( const unsigned char* bytes, int lengthToPrint = 1 );
+	static QString messageToString( const uint8_t* bytes, int lengthToPrint = 1 );
 
 private:
 	static QMutex packetCountMutex;

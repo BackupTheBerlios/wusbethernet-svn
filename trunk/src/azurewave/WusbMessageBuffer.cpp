@@ -45,7 +45,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 	if ( bytes.length() == 4 ) {
 		// Device status message (open/close/etc.)
 		if ( bytes[0] == 0x0 && bytes[1] == 0x0 && bytes[3] == 0x0 ) {
-			unsigned char typeByte  = bytes[2];
+			uint8_t typeByte  = bytes[2];
 			switch( typeByte ) {
 			case 0x04:
 				// close device

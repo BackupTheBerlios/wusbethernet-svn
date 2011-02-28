@@ -11,6 +11,7 @@
 #include "../utils/Logger.h"
 #include "../BasicUtils.h"
 #include <qbytearray.h>
+#include <stdint.h>
 
 
 ControlMessageBuffer::ControlMessageBuffer( HubDevice * recipientClass ) {
@@ -120,12 +121,12 @@ void ControlMessageBuffer::retrieveMessageLengthAndType() {
 	}
 }
 
-ControlMessageBuffer::TypeOfMessage ControlMessageBuffer::getTypeOfMessage( const QByteArray & bytes ) {
+ControlMessageBuffer::eTypeOfMessage ControlMessageBuffer::getTypeOfMessage( const QByteArray & bytes ) {
 	if ( bytes.size() < 4 ) return TOM_NOP;
 	// First 2 bytes are always: 0x77 0x77  OR  0x66 0x66
 	// 0x66 -> "request"
 	// 0x77 -> "answer"
-	unsigned char byte  = bytes[0];
+	uint8_t byte  = bytes[0];
 	if ( byte != 0x77 && byte != 0x66 ) return TOM_NOP;
 	byte  = bytes[1];
 	if ( byte != 0x77 && byte != 0x66 ) return TOM_NOP;
@@ -157,9 +158,9 @@ int ControlMessageBuffer::getLengthOfMessage( const QByteArray & bytes ) {
 
 	// unclear if byte 3 belongs to length... (never seen anything different)
 	// By now: byte 3, 4 and 5 are giving the total length of the message
-	unsigned char lenbyte0  = bytes[3];
-	unsigned char lenbyte1  = bytes[4];
-	unsigned char lenbyte2  = bytes[5];
+	uint8_t lenbyte0  = bytes[3];
+	uint8_t lenbyte1  = bytes[4];
+	uint8_t lenbyte2  = bytes[5];
 
 	int retVal = (lenbyte0 << 16);
 	retVal |= (lenbyte1 << 8);
@@ -174,7 +175,7 @@ QString ControlMessageBuffer::messageToString( const QByteArray & bytes, int len
 	QString str( lengthToPrint * 2 + lengthToPrint -1, ' ' );
 	int pointer = 0;
 	for ( int i = 0; i < lengthToPrint && i < bytes.length(); i++ ) {
-		unsigned char c = bytes[i];
+		uint8_t c = bytes[i];
 		if ( c <= 0x0f ) {
 			// fill with '0' if number < 0x0f
 			str.replace( pointer, 1, "0" );
@@ -186,7 +187,7 @@ QString ControlMessageBuffer::messageToString( const QByteArray & bytes, int len
 	return str;
 }
 
-QString ControlMessageBuffer::typeOfMessageToString( ControlMessageBuffer::TypeOfMessage type ) {
+QString ControlMessageBuffer::typeOfMessageToString( ControlMessageBuffer::eTypeOfMessage type ) {
 	switch( type ) {
 	case TOM_SERVERINFO:
 		return QString("SERVERINFO");

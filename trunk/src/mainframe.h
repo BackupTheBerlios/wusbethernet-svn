@@ -16,6 +16,7 @@
 class QAction;
 class ConnectionController;
 class PreferencesBox;
+class QTreeWidgetItem;
 
 class mainFrame : public QMainWindow
 {
@@ -43,11 +44,17 @@ private slots:
 	void quitProgram();
 	void runDiscovery();
 	void contextMenuSlot( const QPoint & );
+	void treeItemClicked( QTreeWidgetItem * item, int column );
 	void editPreferencesBoxFinished( int result );
 	/**
 	 * Receive user specific info/warning/question message from hub device
 	 */
 	void userInfoMessageSlot( const QString & key, const QString & message, int answerBits );
+	/**
+	 * MrProper sequence for application.
+	 * TODO this method should be extracted to an own class or other place
+	 */
+	void cleanUpAllStuff();
 
 signals:
 	/**

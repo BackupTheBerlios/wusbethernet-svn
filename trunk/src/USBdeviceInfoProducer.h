@@ -14,6 +14,8 @@
 #include <QHash>
 #include "TI_WusbStack.h"
 #include "USButils.h"
+#include <stdint.h>
+
 
 class Logger;
 
@@ -23,8 +25,8 @@ public:
 		bool isValid;
 		int expectedReturnLength;
 		int endpoint;
-		TI_WusbStack::DataTransferType dataTransfer;
-		TI_WusbStack::DataDirectionType dataDirection;
+		TI_WusbStack::eDataTransferType dataTransfer;
+		TI_WusbStack::eDataDirectionType dataDirection;
 	};
 	USBdeviceInfoProducer();
 	virtual ~USBdeviceInfoProducer();
@@ -52,7 +54,7 @@ private:
 	QByteArray buffer;
 	QByteArray tempBuffer;
 	QString bcdToString( unsigned short bcdValue );
-	const QString endpointAttributesToString( unsigned char bmAttributes );
+	const QString endpointAttributesToString( uint8_t bmAttributes );
 };
 
 #endif /* USBDEVICEINFOPRODUCER_H_ */

@@ -1,11 +1,17 @@
 TEMPLATE = app
 TARGET = USBhubConnect
 CODECFORTR = UTF-8
+
+unix {
+	LIBVHCIHCD = /usr/local
+}
+
 QT += core \
     network \
     xml \
     gui
-HEADERS += src/TI_USBhub.h \
+HEADERS += src/vhci/LinuxVHCIconnector.h \
+    src/TI_USBhub.h \
     src/TI_WusbStack.h \
     src/config.h \
     src/AboutBox.h \
@@ -31,7 +37,8 @@ HEADERS += src/TI_USBhub.h \
     src/USButils.h \
     src/ConfigManager.h \
     src/mainframe.h
-SOURCES += src/AboutBox.cpp \
+SOURCES += src/vhci/LinuxVHCIconnector.cpp \
+    src/AboutBox.cpp \
     src/utils/LogFileAppender.cpp \
     src/utils/LogConsoleAppender.cpp \
     src/utils/Logger.cpp \
@@ -61,3 +68,9 @@ FORMS += src/AboutBox.ui \
 RESOURCES += src/Resources.qrc
 TRANSLATIONS = i18n/USBhubConnect_en.ts \
     i18n/USBhubConnect_de.ts
+
+unix {
+#	INCLUDEPATH += $${LIBVHCIHCD}/include
+
+	LIBS += -L$${LIBVHCIHCD}/lib -lusb_vhci
+}
