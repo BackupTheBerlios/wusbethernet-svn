@@ -18,6 +18,7 @@ class WusbStack;
 class USBdeviceInfoProducer;
 class HubDevice;
 class Logger;
+class LinuxVHCIconnector;
 struct USBTechDevice;
 
 class USBconnectionWorker : public QThread {
@@ -43,6 +44,14 @@ public:
 	 * (if any) is stored.
 	 */
 	void queryDevice( const QHostAddress & destinationAddress, int destinationPort );
+
+	/**
+	 * Connect device with virtual USB port of local host.<br>
+	 * A new thread will be created to perform given request. After all work is
+	 * done, a signal <tt>workIsDone</tt> will be emitted and a resulting string
+	 * (if any) is stored.
+	 */
+	void connectDevice( const QHostAddress & destinationAddress, int destinationPort );
 
 	/**
 	 * Return resulting string from last operation. If operation is
@@ -72,7 +81,8 @@ protected:
 private:
 	enum eJobType {
 		JOBTYPE_NOWORK,
-		JOBTYPE_QUERY_DEVICE
+		JOBTYPE_QUERY_DEVICE,
+		JOBTYPE_CONNECT_DEVICE
 	};
 
 	USBTechDevice * usbDeviceRef;
@@ -89,6 +99,7 @@ private:
 	TI_WusbStack *stack;
 	Logger * logger;
 	USBdeviceInfoProducer * deviceQueryEngine;
+	LinuxVHCIconnector    * deviceUSBhostConnector;
 
 	/** Destination IP / hostname */
 	QHostAddress destinationIP;
@@ -97,7 +108,11 @@ private:
 
 	static bool firstInstance;
 
+	/** Query information from device - internal callback from <tt>queryDevice</tt> method. */
 	void queryDeviceInternal();
+	/** Connect device to local host - internal callback from <tt>connectDevice</tt> method. */
+	void connectDeviceInternal();
+
 	bool waitForIncomingURB( int waitingTime );
 	void busyWaiting( int waitMillis );
 private slots:

@@ -145,11 +145,11 @@ void LinuxVHCIconnector::stopWork() {
 	}
 }
 
-bool LinuxVHCIconnector::connectDevice( USBTechDevice * device ) {
+int LinuxVHCIconnector::connectDevice( USBTechDevice * device ) {
 	if ( !hcd && !openKernelInterface() ) {
-		return false;
+		return -1;
 	}
-	if ( !hcd || !kernelInterfaceUsable ) return false;
+	if ( !hcd || !kernelInterfaceUsable ) return -1;
 	if ( !shouldRun ) startWork();
 
 
@@ -179,9 +179,9 @@ bool LinuxVHCIconnector::connectDevice( USBTechDevice * device ) {
 		deviceConnectionRequestQueue.enqueue( connRequest );
 
 		connectionRequestQueueMutex->unlock();
-		return true;
+		return port;
 	}
-	return false;
+	return -2;
 }
 
 bool LinuxVHCIconnector::disconnectDevice( int portID ) {

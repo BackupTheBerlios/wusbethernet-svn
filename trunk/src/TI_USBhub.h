@@ -69,7 +69,7 @@ public:
 		connWorker = NULL;
 		lastOperationErrorCode = -1;
 		connectionPortNum = -1;
-		nextJobID = -1;
+		nextJobID = JA_NONE;
 		usageHint = 0;
 	}
 
@@ -79,6 +79,14 @@ public:
 		PS_Unplugged,
 		PS_Claimed,
 		PS_NotAvailable
+	};
+
+
+	/** Job to do on device (by user interaction) */
+	enum eJobAssignment {
+		JA_NONE,
+		JA_INTERNAL_QUERY_DEVICE,
+		JA_CONNECT_DEVICE
 	};
 
 	/**
@@ -99,7 +107,8 @@ public:
 	/** Reference to active connection worker */
 	USBconnectionWorker * connWorker;
 
-	int nextJobID;
+	/** Next job to do (by user interaction) */
+	eJobAssignment nextJobID;
 
 	/** Flag: This device is valid */
 	bool isValid;
@@ -114,7 +123,7 @@ public:
 	QString claimedByName;
 	/** IP address of computer which imported this device */
 	QString claimedByIP;
-	/** Errorcode of last import/unimport operation */
+	/** Errorcode of last import/unimport operation (from network hub) */
 	int lastOperationErrorCode;
 	/** Port number for connection */
 	int connectionPortNum;

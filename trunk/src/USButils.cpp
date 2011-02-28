@@ -472,6 +472,7 @@ short USButils::decodeBCDToShort( const QString & sBCDstring ) {
 	iValue = sBCDstring.mid(2,2).toInt( &isOK );
 	if ( !isOK ) return (short) 0;
 	retValue |= (iValue);
+	return retValue;
 }
 
 unsigned short USButils::bytesToShort( uint8_t byteLSB, uint8_t byteMSB ) {

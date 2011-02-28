@@ -13,6 +13,7 @@
 #include "TI_WusbStack.h"
 #include "USBdeviceInfoProducer.h"
 #include "azurewave/HubDevice.h"
+#include "vhci/LinuxVHCIconnector.h"
 #include <QMetaType>
 #include <QCoreApplication>
 #include <time.h>
@@ -33,6 +34,7 @@ USBconnectionWorker::USBconnectionWorker( HubDevice * parent, USBTechDevice * de
 	buffer = QByteArray();
 	stack = NULL;
 	deviceQueryEngine = NULL;
+	deviceUSBhostConnector = NULL;
 	// If this is first time use of this class, we have to register the exitcode enum for signaling
 	if ( USBconnectionWorker::firstInstance )
 		qRegisterMetaType<USBconnectionWorker::eWorkDoneExitCode>("USBconnectionWorker::WorkDoneExitCode");
@@ -47,6 +49,8 @@ USBconnectionWorker::~USBconnectionWorker() {
 		delete stack;
 	if ( deviceQueryEngine )
 		delete deviceQueryEngine;
+	if ( deviceUSBhostConnector )
+		delete deviceUSBhostConnector;
 }
 
 Logger * USBconnectionWorker::getLogger() {
@@ -80,7 +84,6 @@ void USBconnectionWorker::queryDeviceInternal() {
 	if ( logger->isDebugEnabled() )
 		logger->debug( "queryDeviceInternal");
 	stack = parentDevice->createStackForDevice( usbDeviceRef->deviceID );
-//	stack = new WusbStack( this, destinationIP, destinationPt );
 	connect( stack, SIGNAL(receivedURB(const QByteArray &)), this, SLOT(receivedURB(const QByteArray &)));
 
 	bool openSuccess = stack->openConnection();
@@ -111,6 +114,30 @@ void USBconnectionWorker::queryDeviceInternal() {
 	currentJob = JOBTYPE_NOWORK;
 }
 
+void USBconnectionWorker::connectDevice( const QHostAddress & destinationAddress, int destinationPort ) {
+	destinationIP = destinationAddress;
+	destinationPt = destinationPort;
+	logger->info( QString("ConnectDevice: %1:%2").arg(
+			destinationAddress.toString(),
+			QString::number( destinationPort ) ) );
+	currentJob = JOBTYPE_CONNECT_DEVICE;
+	deviceUSBhostConnector = LinuxVHCIconnector::getInstance();
+	start();
+}
+
+void USBconnectionWorker::connectDeviceInternal() {
+	int portID = -1000;
+	if ( (portID = deviceUSBhostConnector->connectDevice( usbDeviceRef )) < 0 ) {
+		// problem with port, port number or similar
+		lastExitCode = WORK_DONE_FAILED;
+		currentJob = JOBTYPE_NOWORK;
+		return;
+	}
+	logger->info(QString("Connected on port %1").arg( QString::number( portID) ));
+
+	lastExitCode = WORK_DONE_SUCCESS;
+	currentJob = JOBTYPE_NOWORK;
+}
 
 bool USBconnectionWorker::waitForIncomingURB( int waitMillis ) {
 	int waitCount = 0;
@@ -155,10 +182,12 @@ void USBconnectionWorker::run() {
 	case JOBTYPE_QUERY_DEVICE:
 		queryDeviceInternal();
 		break;
+	case JOBTYPE_CONNECT_DEVICE:
+		connectDeviceInternal();
+		break;
 	default:
 		break;
 	}
 	logger->info("Job finished!");
 	emit workIsDone(lastExitCode, usbDeviceRef);
-	logger->info("Job finished2");
 }

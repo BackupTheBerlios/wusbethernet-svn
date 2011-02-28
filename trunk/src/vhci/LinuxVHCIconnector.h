@@ -64,8 +64,10 @@ public:
 	void closeKernelInterface();
 	/**
 	 * Connect given device to kernel.
+	 * @param	device descriptor
+	 * @return	port number
 	 */
-	bool connectDevice( USBTechDevice * device );
+	int connectDevice( USBTechDevice * device );
 	/**
 	 * Disconnect device on given port from OS.
 	 */

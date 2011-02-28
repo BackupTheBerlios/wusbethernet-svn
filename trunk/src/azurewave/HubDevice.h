@@ -180,7 +180,9 @@ private:
 	QString getIconResourceForDevice( USBTechDevice & usbDevice );
 	void setToolTipText();
 	void refreshAllWidgetItemForDevice();
+
 	void queryDeviceJob(USBTechDevice & deviceRef);
+	void connectDeviceJob( USBTechDevice & deviceRef );
 public slots:
 	void sendAliveRequest();
 	void readControlConnectionMessage();
