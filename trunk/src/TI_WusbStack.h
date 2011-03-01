@@ -85,7 +85,7 @@ public:
 
 signals:
 	/**
-	 * Signal to be emmited when a
+	 * Signal to be emmited when an URB is received.
 	 */
 	void receivedURB( const QByteArray & );
 

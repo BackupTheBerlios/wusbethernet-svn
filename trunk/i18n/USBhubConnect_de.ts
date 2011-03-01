@@ -62,28 +62,33 @@ ABSOLUTELY NO WARRANTY.</source>
 <context>
     <name>ConnectionController</name>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="345"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="357"/>
         <source>Connect</source>
         <translation>Verbinden</translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="351"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="366"/>
         <source>Disconnect</source>
         <translation>Trennen</translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="361"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="376"/>
         <source>Query device info</source>
         <translation>Geräteinfo abfragen</translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="375"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="390"/>
         <source>Connect all</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/ConnectionController.cpp" line="380"/>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="395"/>
         <source>Disconnect all</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/azurewave/ConnectionController.cpp" line="411"/>
+        <source>Cannot connect device: OS interface not available!</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -102,23 +107,23 @@ ABSOLUTELY NO WARRANTY.</source>
         <translation type="obsolete">%1 - Verwendet von &lt;em&gt;%2&lt;/em&gt; (%3)</translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="259"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="262"/>
         <source>User on host %1 requesting access to device: &lt;br&gt;&lt;center&gt;%2&lt;/center&gt;&lt;br&gt;&lt;b&gt;Disconnect?&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="562"/>
-        <source>&lt;br&gt;&lt;b&gt;Warning:&lt;/b&gt; Usage possible limited</source>
+        <location filename="../src/azurewave/HubDevice.cpp" line="565"/>
+        <source>&lt;b&gt;&lt;i&gt;Warning:&lt;/i&gt; &lt;font color=&quot;red&quot;&gt;Usage maybe degraded&lt;/font&gt;&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="568"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="588"/>
+        <source>&lt;html&gt;%1&lt;b&gt;USB device: &lt;em&gt;%2&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;0x%6/0x%7&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%9&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;0x%10:0x%11&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%12&lt;/em&gt;%13&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/azurewave/HubDevice.cpp" line="571"/>
         <source>%1 - Used by %2 (%3)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="585"/>
-        <source>&lt;html&gt;&lt;b&gt;USB device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;0x%5/0x%6&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%7&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;%9:%10&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%11&lt;/em&gt;%12%13&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -126,7 +131,7 @@ ABSOLUTELY NO WARRANTY.</source>
         <translation type="obsolete">&lt;html&gt;&lt;b&gt;USB Gerät: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Hersteller: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Verbindungsport: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;Hersteller-/ProduktID: &lt;em&gt;%5/%6&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%7&lt;/em&gt;&lt;br&gt;USB Typ: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB Klasse: &lt;em&gt;%9:%10&lt;/em&gt;&lt;br&gt;Anz. interfaces: &lt;em&gt;%11&lt;/em&gt;%12&lt;/html&gt;</translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="620"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="622"/>
         <source>&lt;html&gt;&lt;b&gt;Device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Model: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Protocol: &lt;em&gt;%6&lt;/em&gt;&lt;br&gt;Contact: %7&lt;/html&gt;</source>
         <translation>&lt;html&gt;&lt;b&gt;Gerät: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Model: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Hersteller: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Protokoll: &lt;em&gt;%6&lt;/em&gt;&lt;br&gt;Kontaktzeit: %7&lt;/html&gt;</translation>
     </message>
@@ -468,64 +473,64 @@ p, li { white-space: pre-wrap; }
 <context>
     <name>mainFrame</name>
     <message>
-        <location filename="../src/mainframe.cpp" line="40"/>
+        <location filename="../src/mainframe.cpp" line="44"/>
         <source>&amp;Run</source>
         <translation>&amp;Start</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="41"/>
+        <location filename="../src/mainframe.cpp" line="45"/>
         <source>Start/Stop network discovery</source>
         <translation>Geräteerkennung im Netzwerk: Start/Stop</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="52"/>
+        <location filename="../src/mainframe.cpp" line="56"/>
         <source>&amp;Preferences</source>
         <translation>&amp;Einstellungen</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="53"/>
+        <location filename="../src/mainframe.cpp" line="57"/>
         <source>Show/Edit preferences</source>
         <translation>Einstellungen Anzeigen und Ändern</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="57"/>
+        <location filename="../src/mainframe.cpp" line="61"/>
         <source>&amp;About</source>
         <translation>&amp;Über</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="58"/>
+        <location filename="../src/mainframe.cpp" line="62"/>
         <source>About this program and help</source>
         <translation>Über dieses Programm und Hilfe</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="62"/>
+        <location filename="../src/mainframe.cpp" line="66"/>
         <source>&amp;Quit</source>
         <translation>&amp;Schließen</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="63"/>
+        <location filename="../src/mainframe.cpp" line="67"/>
         <source>Exit program</source>
         <translation>Programm beenden</translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="157"/>
+        <location filename="../src/mainframe.cpp" line="173"/>
         <source>: Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="162"/>
+        <location filename="../src/mainframe.cpp" line="177"/>
         <source>: Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="166"/>
+        <location filename="../src/mainframe.cpp" line="181"/>
         <source>: Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="174"/>
-        <location filename="../src/mainframe.cpp" line="176"/>
-        <location filename="../src/mainframe.cpp" line="178"/>
+        <location filename="../src/mainframe.cpp" line="189"/>
+        <location filename="../src/mainframe.cpp" line="191"/>
+        <location filename="../src/mainframe.cpp" line="193"/>
         <source>: Question</source>
         <translation type="unfinished"></translation>
     </message>

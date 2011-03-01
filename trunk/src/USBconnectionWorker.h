@@ -19,6 +19,8 @@ class USBdeviceInfoProducer;
 class HubDevice;
 class Logger;
 class LinuxVHCIconnector;
+class TI_USB_VHCI;
+class VirtualUSBdevice;
 struct USBTechDevice;
 
 class USBconnectionWorker : public QThread {
@@ -67,6 +69,11 @@ public:
 	eWorkDoneExitCode getLastExitCode();
 
 	/**
+	 * Disconnect a connected device (see <tt>connectDevice()</tt>) from system.
+	 */
+	void disconnectDevice();
+
+	/**
 	 * Thread run loop.<br>
 	 * For technical reasons this method must be declared <em>public</em>...
 	 */
@@ -100,11 +107,15 @@ private:
 	Logger * logger;
 	USBdeviceInfoProducer * deviceQueryEngine;
 	LinuxVHCIconnector    * deviceUSBhostConnector;
+	VirtualUSBdevice * testDev;
 
 	/** Destination IP / hostname */
 	QHostAddress destinationIP;
 	/** Destination port */
 	int destinationPt;
+
+	/** Port-ID of device connection to internal virtual host controller interface (vhci). */
+	int vhciPortID;
 
 	static bool firstInstance;
 

@@ -12,7 +12,7 @@
 // Program name
 #define  PROGNAME		"USBhubConnector"
 // Program version number
-#define  PROGVERSION	"0.1.1"
+#define  PROGVERSION	"0.2"
 // Program author / organization name
 #define  PROGAUTHOR		"sko"
 // Program licence agreement / basis

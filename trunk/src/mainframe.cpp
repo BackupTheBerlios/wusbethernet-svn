@@ -83,14 +83,9 @@ void mainFrame::editPreferences() {
 void mainFrame::showAboutInfo() {
 	// About-Button
 	// create a new instance of aboutbox and show it
-/*	AboutBox *aboutbox = new AboutBox(this);
+	AboutBox *aboutbox = new AboutBox(this);
 	aboutbox->setAttribute( Qt::WA_DeleteOnClose );
 	aboutbox->show();
-*/
-	LinuxVHCIconnector * vhciConn = LinuxVHCIconnector::getInstance();
-	vhciConn->openKernelInterface();
-	vhciConn->startWork();
-	vhciConn->connectDevice(NULL);
 }
 
 void mainFrame::runDiscovery() {
@@ -151,7 +146,7 @@ void mainFrame::contextMenuSlot( const QPoint & pos ) {
 
 void mainFrame::treeItemClicked( QTreeWidgetItem * item, int column ) {
 	if ( item->parent() ) {
-		printf("treeItemClicked\n");
+		printf("treeItemClicked Col=%i\n", column );
 		// XXX process event in ConnectionController
 	}
 }

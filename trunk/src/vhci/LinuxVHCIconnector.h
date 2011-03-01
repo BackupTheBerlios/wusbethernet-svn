@@ -11,6 +11,7 @@
 
 #include "../../usb-vhci/libusb_vhci.h"
 #include "../TI_WusbStack.h"
+#include "../TI_USB_VHCI.h"
 #include <QThread>
 #include <QQueue>
 #include <QMap>
@@ -22,18 +23,9 @@ class QWaitCondition;
 class USBTechDevice;
 
 
-class LinuxVHCIconnector : public QThread {
+class LinuxVHCIconnector : public TI_USB_VHCI {
 	Q_OBJECT
 public:
-	enum ePortStatus {
-		PORTSTATE_UNKNOWN_STATE,
-		PORTSTATE_POWEREDOFF,
-		PORTSTATE_DISABLED,
-		PORTSTATE_SUSPENDED,
-		PORTSTATE_POWERON,
-		PORTSTATE_RESET,
-		PORTSTATE_RESUME
-	};
 
 	virtual ~LinuxVHCIconnector();
 	/**
@@ -53,21 +45,30 @@ public:
 	 * number of ports (default: <tt>6</tt>) are allocated on a virtual usb hub.
 	 * @return	<code>true</code> if device could be opened, <code>false</code> if not.
 	 */
-	bool openKernelInterface();
+	virtual bool openInterface();
 	/**
 	 * Returns if kernel interface is connected.
 	 */
-	bool isConnected();
+	virtual bool isConnected();
 	/**
 	 * Closes the (Linux-) kernel <em>usb-vhci</em> interface.
 	 */
-	void closeKernelInterface();
+	virtual void closeInterface();
 	/**
 	 * Connect given device to kernel.
 	 * @param	device descriptor
-	 * @return	port number
+	 * @return	port number / ID
 	 */
-	int connectDevice( USBTechDevice * device );
+	virtual int connectDevice( USBTechDevice * device, int portID = -1);
+
+	/**
+	 * Retrieves and reserves a free port-ID.<br>
+	 * If port-ID is not needed anymore use <tt>disconnectDevice</tt> to
+	 * free port-ID.
+	 * @return	port number / ID
+	 */
+	virtual int getAndReservePortID();
+
 	/**
 	 * Disconnect device on given port from OS.
 	 */
@@ -85,7 +86,7 @@ public:
 	/**
 	 * Passes back an answer to host for last request.
 	 */
-	void giveBackAnswerURB( void * refData, int portID, bool isOK, QByteArray * urbData );
+	virtual void giveBackAnswerURB( void * refData, int portID, bool isOK, QByteArray * urbData );
 
 	/**
 	 * Thread run loop.<br>
@@ -122,7 +123,7 @@ private:
 	/** Array for each port of virtual hub with used status */
 	bool* portInUseList;
 	/** Array for each port with port status */
-	ePortStatus* portStatusList;
+	TI_USB_VHCI::ePortStatus* portStatusList;
 
 	/** Connection to (virtual) host controller device */
 	usb::vhci::local_hcd * hcd;

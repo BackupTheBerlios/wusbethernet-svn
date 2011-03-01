@@ -31,7 +31,7 @@ bool LinuxVHCIconnector::isWaitingForWork = false;
 
 
 LinuxVHCIconnector::LinuxVHCIconnector( QObject* parent )
-		: QThread( parent ) {
+		: TI_USB_VHCI( parent ) {
 	instance = this;
 	hcd = NULL;
 	shouldRun = false;
@@ -90,7 +90,7 @@ void LinuxVHCIconnector::signal_work_enqueued(void* arg, usb::vhci::hcd& from) t
 	workInProgressMutex->unlock();
 }
 
-bool LinuxVHCIconnector::openKernelInterface() {
+bool LinuxVHCIconnector::openInterface() {
 	if ( hcd ) return true;
 	try {
 		// open interface
@@ -113,7 +113,7 @@ bool LinuxVHCIconnector::openKernelInterface() {
 	return true;
 }
 
-void LinuxVHCIconnector::closeKernelInterface() {
+void LinuxVHCIconnector::closeInterface() {
 	if ( !hcd ) return;
 	// TODO check is devices are connected and disconnect them accordingly...
 	delete hcd;
@@ -145,19 +145,19 @@ void LinuxVHCIconnector::stopWork() {
 	}
 }
 
-int LinuxVHCIconnector::connectDevice( USBTechDevice * device ) {
-	if ( !hcd && !openKernelInterface() ) {
+int LinuxVHCIconnector::connectDevice( USBTechDevice * device, int portID ) {
+	if ( !hcd && !openInterface() ) {
 		return -1;
 	}
 	if ( !hcd || !kernelInterfaceUsable ) return -1;
 	if ( !shouldRun ) startWork();
 
-
-	int port = getUnusedPort();
-	if ( port > 0 ) {
+	if ( portID < 1 )
+		portID = getUnusedPort();
+	if ( portID > 0 ) {
 		struct DeviceConnectionData connRequest;
 		connRequest.refDevice = device;
-		connRequest.port = port;
+		connRequest.port = portID;
 		connRequest.operationFlag = 1;
 		short bcdUSB = USButils::decodeBCDToShort( connRequest.refDevice->bcdUSB );
 		if ( bcdUSB >= 0x0200 )
@@ -171,15 +171,15 @@ int LinuxVHCIconnector::connectDevice( USBTechDevice * device ) {
 		deviceInitializationURBdata[port] = createDeviceDescriptorFromDeviceDescription( deviceDescriptor );
 */
 		logger->debug(QString("Enqueing device connect request on port %1").
-				arg( QString::number(port) ) );
+				arg( QString::number(portID) ) );
 
 		connectionRequestQueueMutex->lock();
 
-		portInUseList[port-1] = true;	// mark port as used
+		portInUseList[portID-1] = true;	// mark port as used
 		deviceConnectionRequestQueue.enqueue( connRequest );
 
 		connectionRequestQueueMutex->unlock();
-		return port;
+		return portID;
 	}
 	return -2;
 }
@@ -198,6 +198,11 @@ bool LinuxVHCIconnector::disconnectDevice( int portID ) {
 	return true;
 }
 
+int LinuxVHCIconnector::getAndReservePortID() {
+	int portID = getUnusedPort();
+	portInUseList[portID-1] = true;	// mark port as used
+	return portID;
+}
 
 int LinuxVHCIconnector::getUnusedPort() {
 	for ( int i = 0; i < numberOfPorts; i++ ) {

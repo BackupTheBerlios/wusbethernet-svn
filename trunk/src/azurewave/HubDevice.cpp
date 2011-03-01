@@ -753,7 +753,8 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	if ( ! deviceRef ) return;
 	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ||
 			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
-		logger->warn( QString("Disconnect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
+		logger->warn( QString("Disconnect OP: Device %1 not valid or not available (valid=%2, owned=%3, status=%4").arg(
+				deviceRef->deviceID,
 				(deviceRef->isValid? QString("true") : QString("false")),
 				(deviceRef->owned? QString("true") : QString("false")),
 				QString::number( (int) deviceRef->status )
@@ -762,7 +763,17 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	}
 	if ( deviceRef->status == USBTechDevice::PS_Claimed && deviceRef->owned ) {
 		// TODO Device is claimed by us -> need to implement disconnect procedure!
-		logger->warn( QString("Sorry: Device disconnect not implemented yet...") );
+		//logger->warn( QString("Sorry: Device disconnect not implemented yet...") );
+		if ( !deviceRef->connWorker ) {
+			// Problem: device is claimed/owned by us but no connection worker available???
+			logger->warn( QString("Device disconnect operation on owned device but no connection worker registered!?") );
+			// send "unimport" message to hub (see below)
+			sendUnimportMessage( deviceRef->deviceID, QString::null );
+		} else {
+			if ( logger->isInfoEnabled() )
+				logger->info(QString("Disconnect requested for device: %1").arg( deviceRef->deviceID ) );
+			deviceRef->connWorker->disconnectDevice();
+		}
 	} else if ( deviceRef->status == USBTechDevice::PS_Claimed && !deviceRef->owned ) {
 		// send "unimport" message to hub
 		sendUnimportMessage( deviceRef->deviceID, QString::null );

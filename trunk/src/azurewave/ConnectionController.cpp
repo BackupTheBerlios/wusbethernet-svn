@@ -406,11 +406,12 @@ void ConnectionController::contextMenuAction_Connect( ) {
 		USBTechDevice* refUSBDevice = currentSelectedTreeWidget->data(0,Qt::UserRole).value<USBTechDevice*>();
 		if ( refUSBDevice ) {
 			LinuxVHCIconnector * connector = LinuxVHCIconnector::getInstance();
-			if ( !connector->openKernelInterface() ) {
-				logger->warn(QString::fromLatin1( "OS interface not available!" ) );
+			if ( !connector->openInterface() ) {
+				logger->warn(QString( "OS interface not available!" ) );
 				emit userInfoMessage( "none", tr("Cannot connect device: OS interface not available!" ), -2 );
 			} else {
-				logger->info(QString::fromLatin1("Connect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
+				if ( logger->isInfoEnabled() )
+					logger->info(QString("Connect item = %1").arg( currentSelectedTreeWidget->text(0) ) );
 				refUSBDevice->parentHub->connectDevice( refUSBDevice );
 			}
 		} else
