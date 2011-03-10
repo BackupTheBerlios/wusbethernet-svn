@@ -10,6 +10,7 @@
 #include "../utils/Logger.h"
 #include "../TI_USBhub.h"
 #include "../USButils.h"
+#include "../BasicUtils.h"
 #include <QString>
 #include <QMutex>
 #include <QWaitCondition>
@@ -49,6 +50,8 @@ LinuxVHCIconnector::LinuxVHCIconnector( QObject* parent )
 	// synchronization mutex
 	connectionRequestQueueMutex = new QMutex;
 	deviceReplyDataQueueMutex = new QMutex;
+
+	nextConnectionRequestDeferValue = 0L;
 
 	// init logger with root-logger
 	logger = Logger::getLogger("VHCI");
@@ -147,13 +150,16 @@ void LinuxVHCIconnector::stopWork() {
 
 int LinuxVHCIconnector::connectDevice( USBTechDevice * device, int portID ) {
 	if ( !hcd && !openInterface() ) {
-		return -1;
+		return -2;
 	}
-	if ( !hcd || !kernelInterfaceUsable ) return -1;
+	if ( !hcd || !kernelInterfaceUsable ) {
+		return -2;
+	}
 	if ( !shouldRun ) startWork();
 
 	if ( portID < 1 )
 		portID = getUnusedPort();
+
 	if ( portID > 0 ) {
 		struct DeviceConnectionData connRequest;
 		connRequest.refDevice = device;
@@ -171,7 +177,7 @@ int LinuxVHCIconnector::connectDevice( USBTechDevice * device, int portID ) {
 		deviceInitializationURBdata[port] = createDeviceDescriptorFromDeviceDescription( deviceDescriptor );
 */
 		logger->debug(QString("Enqueing device connect request on port %1").
-				arg( QString::number(portID) ) );
+				arg( (portID > 0? QString::number(portID) : "(unspecified)") ) );
 
 		connectionRequestQueueMutex->lock();
 
@@ -179,9 +185,8 @@ int LinuxVHCIconnector::connectDevice( USBTechDevice * device, int portID ) {
 		deviceConnectionRequestQueue.enqueue( connRequest );
 
 		connectionRequestQueueMutex->unlock();
-		return portID;
 	}
-	return -2;
+	return portID;
 }
 
 bool LinuxVHCIconnector::disconnectDevice( int portID ) {
@@ -260,6 +265,12 @@ void LinuxVHCIconnector::giveBackAnswerURB( void * refData, int portID, bool isO
 
 bool LinuxVHCIconnector::processOutstandingConnectionRequests() {
 	if ( deviceConnectionRequestQueue.isEmpty() ) return false;
+	long long nowTimeStamp = 0L;
+	if ( nextConnectionRequestDeferValue > 0L ) {
+		nowTimeStamp = currentTimeMillis();
+		if ( nextConnectionRequestDeferValue > nowTimeStamp )
+			return false;
+	}
 	connectionRequestQueueMutex->lock();
 	if ( deviceConnectionRequestQueue.isEmpty() ) return false;
 	struct DeviceConnectionData connRequest = deviceConnectionRequestQueue.dequeue();
@@ -276,9 +287,30 @@ bool LinuxVHCIconnector::processOutstandingConnectionRequests() {
 			connRequest.port = getUnusedPort();
 
 		if ( connRequest.port > 0 ) {
+			QString datarateStr = "none";
+			switch ( connRequest.dataRate ) {
+			case usb::data_rate_high:
+				datarateStr = "high";
+				break;
+			case usb::data_rate_full:
+				datarateStr = "full";
+				break;
+			case usb::data_rate_low:
+				datarateStr = "low";
+				break;
+			}
+			logger->info( QString("Connecting device on port %1 with datarate %2").arg(
+					QString::number(connRequest.port), datarateStr ) );
 			hcd->port_connect( connRequest.port, connRequest.dataRate );
-		} else
+		} else {
+			nextConnectionRequestDeferValue = currentTimeMillis() + 10000L;	// next try in 10 secs
+			// if no port is available just put connection request job back into queue
+			connectionRequestQueueMutex->lock();
+			deviceConnectionRequestQueue.enqueue( connRequest );
+			connectionRequestQueueMutex->unlock();
+
 			return false;
+		}
 	}
 	return true;
 }
@@ -300,16 +332,25 @@ bool LinuxVHCIconnector::processOutstandingURBReplys() {
 					const char* replyRawData = replyData.dataURB->constData();
 					std::copy( replyRawData, replyRawData + lenMax, buffer );	// copy data
 					urbOrig->set_buffer_actual( lenMax );
-				}
-				urbOrig->ack();
-			} else
-				urbOrig->stall();
 
+					logger->debug(QString("VHCIconn: Replypacket (len=%1): %2").arg(
+							QString::number( lenMax ),
+							messageToString( buffer, lenMax )) );
+				}
+				logger->debug(QString("URB reply: Sending ACK, buffer length=%1").arg(QString::number(lenMax)));
+				urbOrig->ack();
+			} else {
+				logger->debug(QString("URB reply: Sending STALL"));
+				urbOrig->stall();
+			}
 			hcd->finish_work( replyData.refURB );
 		} catch ( std::exception &ex ) {
 			logger->error( QString::fromLatin1("Exception caught while passing USB reply to host - Error: %1").
 					arg( QString(ex.what()) ) );
 		}
+
+		if ( replyData.dataURB )
+			delete replyData.dataURB;
 	}
 	deviceReplyDataQueueMutex->unlock();
 
@@ -339,45 +380,65 @@ void LinuxVHCIconnector::run() {
 
 		// TODO check for memory allocation error / exception
 		// get something to do from host controller
-		cont = hcd->next_work(&work);
+		try {
+			cont = hcd->next_work(&work);
+		} catch ( std::exception &ex ) {
+			logger->error(QString("Error: %1").arg(QString(ex.what())));
+		}
 		if ( work ) {
 			if ( usb::vhci::port_stat_work* psw = dynamic_cast<usb::vhci::port_stat_work*>(work) ) {
 				// Host changes status of port
 				uint8_t portID = psw->get_port();
 				if( psw->triggers_power_off() || psw->triggers_disable() || psw->triggers_suspend() ) {
-					logger->info(QString("Portstatus #%1 powered off / disabled / suspend").
+					logger->info(QString("USB Port #%1 powered off").
 							arg(QString::number(portID)));
 					portStatusList[ portID -1 ] = PORTSTATE_DISABLED;
 					if ( portInUseList[psw->get_port()-1] ) {
-						// port is not in use by us!
+						// port is in use by us!
 						// TODO send signal and disconnect all devices
+						//						logger->info(QString("port #%1 not in use?").arg( QString::number(portID) ) );
 					}
-				} else if ( psw->triggers_power_on() ) {
-					logger->info(QString("Portstatus #%1 powered on").
+				}
+				if ( psw->triggers_power_on() ) {
+					logger->info(QString("USB Port #%1 powered on").
 							arg(QString::number(portID)));
 					portStatusList[ portID -1 ] = PORTSTATE_POWERON;
 					if ( portInUseList[psw->get_port()-1] ) {
 						// port is in use by us!
 						emit portStatusChanged( portID, PORTSTATE_POWERON );
 					}
-				} else if ( psw->triggers_reset() ) {
-					logger->info(QString("Portstatus #%1 reset on").
+				}
+				if ( psw->triggers_reset() ) {
+					logger->info(QString("USB Port #%1 reset").
 							arg(QString::number(portID)));
 					// portStatusList[ portID -1 ] = PORTSTATE_RESET;
 					if ( hcd->get_port_stat( portID ).get_connection() ) {
+						logger->info(" - Completing reset on port");
 						hcd->port_reset_done( portID );
 					}
 					emit portStatusChanged( portID, PORTSTATE_RESET );
+				}
 
-				} else if ( psw->triggers_resuming() ) {
-					logger->info(QString("Portstatus #%1 resuming").
+				if ( psw->triggers_resuming() ) {
+					logger->info(QString("USB Port #%1 resuming").
 							arg(QString::number(portID)));
-					// portStatusList[ portID -1 ] = PORTSTATE_RESUME;
+					portStatusList[ portID -1 ] = PORTSTATE_POWERON;
 					if ( hcd->get_port_stat( portID ).get_connection() ) {
 						hcd->port_resumed( portID );
 					}
 					emit portStatusChanged( portID, PORTSTATE_RESUME );
 				}
+
+				if ( psw->triggers_suspend() || psw->triggers_disable() ) {
+					logger->info(QString("USB Port #%1 disabled / suspend").
+							arg(QString::number(portID)));
+					portStatusList[ portID -1 ] = PORTSTATE_SUSPENDED;
+					if ( portInUseList[psw->get_port()-1] ) {
+						// port is in use by us!
+						// TODO send signal and disconnect all devices
+					}
+				}
+
 				hcd->finish_work(work);
 			} // portstatus
 
@@ -388,6 +449,7 @@ void LinuxVHCIconnector::run() {
 					// get URB data from work structure
 					usb::urb* urbData = puw->get_urb();
 					if ( urbData ) {
+
 						// emit urb data to receiver
 						uint8_t endPtNo = urbData->get_endpoint_number();	// which endpoint
 						uint16_t xferFlags = urbData->get_flags();  // transfer flags
@@ -448,7 +510,8 @@ void LinuxVHCIconnector::run() {
 							break;
 						}
 
-					}
+					} else
+						printf("no URB data???\n");
 				} else {
 					logger->debug(QString("Got canceled URB for port %1").arg( QString::number(portID) ) );
 				}

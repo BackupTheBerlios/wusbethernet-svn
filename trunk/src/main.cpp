@@ -65,6 +65,11 @@ void initLogger( ConfigManager & conf ) {
 	l->addConsoleAppender();
 	l->addFileAppender("USBquery.log", enableLogfileAppend);
 
+	l = Logger::getLogger("USBConn");
+	l->setLogLevel( loglevel );
+	l->addConsoleAppender();
+	l->addFileAppender("USB_default.log", enableLogfileAppend);
+
 	l = Logger::getLogger("USBConn0");
 	l->setLogLevel( loglevel );
 	l->addConsoleAppender();
@@ -134,6 +139,11 @@ void initLogger( ConfigManager & conf ) {
 	l->setLogLevel( loglevel );
 	l->addConsoleAppender();
 	l->addFileAppender("VHCI.log", enableLogfileAppend);
+
+	l = Logger::getLogger("TEST");
+	l->setLogLevel( loglevel );
+	l->addConsoleAppender();
+	l->addFileAppender("Test.log", enableLogfileAppend);
 }
 
 /**

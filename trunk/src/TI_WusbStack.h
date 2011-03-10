@@ -83,6 +83,32 @@ public:
 			int endpoint,
 			int receiveLength ) = 0;
 
+
+	static QString transferTypeToString( eDataTransferType dataTransferType ) {
+		switch ( dataTransferType ) {
+		case CONTROL_TRANSFER:
+			return QString::fromLatin1("ControlTransfer");
+		case BULK_TRANSFER:
+			return QString::fromLatin1("BulkTransfer");
+		case ISOCHRONOUS_TRANSFER:
+			return QString::fromLatin1("IsoTransfer");
+		case INTERRUPT_TRANSFER:
+			return QString::fromLatin1("InterruptTransfer");
+		}
+	};
+	static QString dataDirectionToString( eDataDirectionType directionType ) {
+		switch ( directionType ) {
+		case DATADIRECTION_IN:
+			return QString::fromLatin1("IN");
+		case DATADIRECTION_OUT:
+			return QString::fromLatin1("OUT");
+		case DATADIRECTION_CONTROL:
+			return QString::fromLatin1("CONTROL");
+		case DATADIRECTION_NONE:
+			return QString::fromLatin1("NONE");
+		}
+	}
+
 signals:
 	/**
 	 * Signal to be emmited when an URB is received.

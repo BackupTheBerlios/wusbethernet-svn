@@ -95,27 +95,27 @@ ABSOLUTELY NO WARRANTY.</source>
 <context>
     <name>HubDevice</name>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="262"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="263"/>
         <source>User on host %1 requesting access to device: &lt;br&gt;&lt;center&gt;%2&lt;/center&gt;&lt;br&gt;&lt;b&gt;Disconnect?&lt;/b&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="565"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="566"/>
         <source>&lt;b&gt;&lt;i&gt;Warning:&lt;/i&gt; &lt;font color=&quot;red&quot;&gt;Usage maybe degraded&lt;/font&gt;&lt;/b&gt;&lt;br&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="588"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="589"/>
         <source>&lt;html&gt;%1&lt;b&gt;USB device: &lt;em&gt;%2&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Connected port: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;ID: &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Vendor/Product: &lt;em&gt;0x%6/0x%7&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%8&lt;/em&gt;&lt;br&gt;USB type: &lt;em&gt;%9&lt;/em&gt;&lt;br&gt;USB class: &lt;em&gt;0x%10:0x%11&lt;/em&gt;&lt;br&gt;Num. interfaces: &lt;em&gt;%12&lt;/em&gt;%13&lt;/html&gt;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="571"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="572"/>
         <source>%1 - Used by %2 (%3)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/azurewave/HubDevice.cpp" line="622"/>
+        <location filename="../src/azurewave/HubDevice.cpp" line="623"/>
         <source>&lt;html&gt;&lt;b&gt;Device: &lt;em&gt;%1&lt;/em&gt;&lt;/b&gt;&lt;br&gt;Model: &lt;em&gt;%2&lt;/em&gt;&lt;br&gt;Manufacturer: &lt;em&gt;%3&lt;/em&gt;&lt;br&gt;Version: &lt;em&gt;%4&lt;/em&gt;&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp; &lt;em&gt;%5&lt;/em&gt;&lt;br&gt;Protocol: &lt;em&gt;%6&lt;/em&gt;&lt;br&gt;Contact: %7&lt;/html&gt;</source>
         <translation></translation>
     </message>
@@ -362,6 +362,14 @@ p, li { white-space: pre-wrap; }
     </message>
 </context>
 <context>
+    <name>USBconnectionWorker</name>
+    <message>
+        <location filename="../src/USBconnectionWorker.cpp" line="159"/>
+        <source>&lt;html&gt;Cannot connect device!&lt;br&gt;No free port on virtual USB hub.&lt;br&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;Try again later!&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>XMLmessageDOMparser</name>
     <message>
         <location filename="../src/azurewave/XMLmessageDOMparser.cpp" line="66"/>
@@ -497,24 +505,29 @@ p, li { white-space: pre-wrap; }
         <translation></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="173"/>
+        <location filename="../src/mainframe.cpp" line="111"/>
+        <source>&lt;html&gt;Cannot open OS interface (&lt;em&gt;VHCI&lt;/em&gt;) to connect USB devices.&lt;br&gt;&lt;b&gt;You will not be able to connect USB devices to system!&lt;/b&gt;&lt;/html&gt;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../src/mainframe.cpp" line="184"/>
         <source>: Warning</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="177"/>
+        <location filename="../src/mainframe.cpp" line="188"/>
         <source>: Error</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="181"/>
+        <location filename="../src/mainframe.cpp" line="192"/>
         <source>: Info</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../src/mainframe.cpp" line="189"/>
-        <location filename="../src/mainframe.cpp" line="191"/>
-        <location filename="../src/mainframe.cpp" line="193"/>
+        <location filename="../src/mainframe.cpp" line="200"/>
+        <location filename="../src/mainframe.cpp" line="202"/>
+        <location filename="../src/mainframe.cpp" line="204"/>
         <source>: Question</source>
         <translation type="unfinished"></translation>
     </message>

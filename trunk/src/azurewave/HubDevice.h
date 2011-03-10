@@ -192,7 +192,11 @@ public slots:
 	 * Handle reply from user to question/info.
 	 */
 	virtual void userInfoReply( const QString & key, const QString & reply, int answerBits );
-
+	/**
+	 * Relay an user info message from submodules to higher modules.
+	 * This allows that a higher module (caller) to be unaware of implementation details and dependency.
+	 */
+	virtual void userInfoMessageRelay( const QString & key, const QString & message, int answerBits );
 signals:
 	/**
 	 * Signalize that something has happened, which requires user interaction.

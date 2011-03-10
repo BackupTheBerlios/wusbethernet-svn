@@ -129,7 +129,15 @@ private:
 private slots:
 	void receivedURB( const QByteArray &);
 signals:
-	void workIsDone(USBconnectionWorker::eWorkDoneExitCode,USBTechDevice *);
+	/**
+	 * Signalize that specified device on network hub is diconnected.
+	 * The reason is noted in exit code.
+	 */
+	void workIsDone( USBconnectionWorker::eWorkDoneExitCode, USBTechDevice * );
+	/**
+	 * Signalize that something has happened, which requires user interaction.
+	 */
+	void userInfoMessage( const QString & key, const QString & message, int answerBits );
 
 };
 

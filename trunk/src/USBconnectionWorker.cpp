@@ -39,11 +39,20 @@ USBconnectionWorker::USBconnectionWorker( HubDevice * parent, USBTechDevice * de
 	deviceQueryEngine = NULL;
 	deviceUSBhostConnector = NULL;
 	// If this is first time use of this class, we have to register the exitcode enum for signaling
-	if ( USBconnectionWorker::firstInstance )
-		qRegisterMetaType<USBconnectionWorker::eWorkDoneExitCode>("USBconnectionWorker::WorkDoneExitCode");
+	if ( USBconnectionWorker::firstInstance ) {
+		qRegisterMetaType<USBconnectionWorker::eWorkDoneExitCode>("USBconnectionWorker::eWorkDoneExitCode");
+		qRegisterMetaType<uint16_t>("uint16_t");
+		qRegisterMetaType<uint8_t>("uint8_t");
+		qRegisterMetaType<TI_WusbStack::eDataTransferType>("TI_WusbStack::eDataTransferType");
+		qRegisterMetaType<TI_WusbStack::eDataDirectionType>("TI_WusbStack::eDataDirectionType");
+	}
 	USBconnectionWorker::firstInstance = false;
 
-	logger = Logger::getLogger( QString("USBConn") + QString::number( usbDeviceRef->connectionPortNum) );
+	if ( usbDeviceRef->portNum >= 0 )
+		logger = Logger::getLogger( QString("USBConn") + QString::number( usbDeviceRef->portNum) );
+	else
+		logger = Logger::getLogger( QString("USBConn") );
+//	logger->info("Hallo Leute");
 }
 
 USBconnectionWorker::~USBconnectionWorker() {
@@ -118,12 +127,13 @@ void USBconnectionWorker::queryDeviceInternal() {
 }
 
 void USBconnectionWorker::connectDevice( const QHostAddress & destinationAddress, int destinationPort ) {
+	printf("USBconnectionWorker::connectDevice\n");
 	destinationIP = destinationAddress;
 	destinationPt = destinationPort;
 	logger->info( QString("ConnectDevice: %1:%2").arg(
 			destinationAddress.toString(),
 			QString::number( destinationPort ) ) );
-	currentJob = JOBTYPE_CONNECT_DEVICE;
+
 	deviceUSBhostConnector = LinuxVHCIconnector::getInstance();
 	// Last check if kernel interface is available
 	if ( ! deviceUSBhostConnector->isConnected() ) {
@@ -134,16 +144,21 @@ void USBconnectionWorker::connectDevice( const QHostAddress & destinationAddress
 			return;
 		}
 	}
+	currentJob = JOBTYPE_CONNECT_DEVICE;
 	start();
 }
 
 void USBconnectionWorker::connectDeviceInternal() {
 	int portID = -1000;
-	if ( (portID = deviceUSBhostConnector->connectDevice( usbDeviceRef )) < 0 ) {
+	if ( (portID = deviceUSBhostConnector->connectDevice( usbDeviceRef )) < 1 ) {
 		// problem with port, port number or similar
+		logger->warn(QString("Cannot connect device to VHCI hub! (portID=%1)").arg( QString::number(portID) ));
 		lastExitCode = WORK_DONE_FAILED;
 		currentJob = JOBTYPE_NOWORK;
 		vhciPortID = -1;
+		emit userInfoMessage( "none", tr("<html>Cannot connect device!<br>"
+				"No free port on virtual USB hub.<br>&nbsp;&nbsp;&nbsp;Try again later!</html>"), -2 );
+		quit();	// stop thread
 		return;
 	}
 	logger->info(QString("Connected on port %1").arg( QString::number( portID) ));
@@ -157,7 +172,7 @@ void USBconnectionWorker::connectDeviceInternal() {
 				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
 				testDev,
 				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				Qt::QueuedConnection );
+				Qt::QueuedConnection ); // Qt::QueuedConnection
 		break;
 	case 2:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend2(
@@ -262,12 +277,14 @@ void USBconnectionWorker::run() {
 
 
 	lastExitCode = WORK_DONE_STILL_RUNNING;
+	logger->info(QString("USBconnectionWorker::run() currentJob=%1").arg(QString::number(currentJob) ) );
 	switch ( currentJob ) {
 	case JOBTYPE_QUERY_DEVICE:
 		queryDeviceInternal();
 		break;
 	case JOBTYPE_CONNECT_DEVICE:
 		connectDeviceInternal();
+		printf("starting worker thread\n");
 		exec();
 		lastExitCode = WORK_DONE_SUCCESS;
 		break;

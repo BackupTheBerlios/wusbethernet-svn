@@ -205,7 +205,8 @@ void HubDevice::receiveData( ControlMessageBuffer::eTypeOfMessage type, const QB
 		errorCounter = 0;
 	switch( type ) {
 	case ControlMessageBuffer::TOM_ALIVE:
-		logger->trace( "alive" );
+		if ( logger->isTraceEnabled() )
+			logger->trace( "got life sign from network hub" );
 		alive = true;
 		lastSeenTimestamp = time(0);
 		setToolTipText();
@@ -467,8 +468,8 @@ void HubDevice::sendAliveRequest() {
 			logger->warn( "Reconnect sucess!" );
 		}
 	}
-	if ( logger->isDebugEnabled() )
-		logger->debug("sending alive request...");
+	if ( logger->isTraceEnabled() )
+		logger->trace(QString("Sending control connection alive request to hub... (%1)").arg( ipAddress.toString() ));
 	// 66 66 6a 00 00 00
 	QByteArray buffer;
 
@@ -736,15 +737,46 @@ void HubDevice::queryDeviceJob( USBTechDevice & deviceRef ) {
 	deviceRef.nextJobID = USBTechDevice::JA_NONE;
 }
 
+void HubDevice::connectDevice( USBTechDevice * deviceRef ) {
+	if ( ! deviceRef ) {
+		logger->error("Call of connectDevice without device parameter?!");
+		return;
+	}
+	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Plugged ||
+			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
+		logger->warn( QString("Connect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
+				(deviceRef->isValid? QString("true") : QString("false")),
+				(deviceRef->owned? QString("true") : QString("false")),
+				QString::number( (int) deviceRef->status )
+		) );
+		return;
+	}
+
+	// Register connection on control channel
+/*
+ XXX
+ 		sendImportDeviceMessage( deviceRef->deviceID,
+				QString::number(deviceRef->idVendor, 16),
+				QString::number(deviceRef->idProduct, 16) );
+
+		deviceRef->nextJobID = USBTechDevice::JA_CONNECT_DEVICE;
+*/
+	connectDeviceJob( *deviceRef );	// XXX
+}
+
 void HubDevice::connectDeviceJob( USBTechDevice & deviceRef ) {
-	if ( deviceRef.lastOperationErrorCode != 0 ) {
+/*	if ( deviceRef.lastOperationErrorCode != 0 ) {
 		logger->warn( "Could not use device cause claim-device-operation failed!" );
 		return;
 	}
+*/
+	logger->info("HubDevice::connectDeviceJob()1");
 	if ( !deviceRef.connWorker )
 		deviceRef.connWorker = new USBconnectionWorker( this, &deviceRef );
 	connect( deviceRef.connWorker, SIGNAL(workIsDone(USBconnectionWorker::eWorkDoneExitCode, USBTechDevice*)),
 			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::eWorkDoneExitCode, USBTechDevice*)), Qt::QueuedConnection );
+	connect( deviceRef.connWorker, SIGNAL(userInfoMessage(const QString &, const QString &, int)),
+			this, SLOT(userInfoMessageRelay(const QString &, const QString &, int)), Qt::QueuedConnection );
 	deviceRef.connWorker->connectDevice( QHostAddress(ipAddress), deviceRef.connectionPortNum );
 	deviceRef.nextJobID = USBTechDevice::JA_NONE;
 }
@@ -753,7 +785,7 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	if ( ! deviceRef ) return;
 	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ||
 			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
-		logger->warn( QString("Disconnect OP: Device %1 not valid or not available (valid=%2, owned=%3, status=%4").arg(
+		logger->warn( QString("Disconnect OP: Device %1 not valid or not available (valid=%2, owned=%3, status=%4)").arg(
 				deviceRef->deviceID,
 				(deviceRef->isValid? QString("true") : QString("false")),
 				(deviceRef->owned? QString("true") : QString("false")),
@@ -783,26 +815,6 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	}
 }
 
-void HubDevice::connectDevice( USBTechDevice * deviceRef ) {
-	if ( ! deviceRef ) return;
-	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Plugged ||
-			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
-		logger->warn( QString("Connect OP: Device not valid or not available (valid=%1, owned=%2, status=%3").arg(
-				(deviceRef->isValid? QString("true") : QString("false")),
-				(deviceRef->owned? QString("true") : QString("false")),
-				QString::number( (int) deviceRef->status )
-		) );
-		// Register connection on control channel
-		sendImportDeviceMessage( deviceRef->deviceID,
-				QString::number(deviceRef->idVendor, 16),
-				QString::number(deviceRef->idProduct, 16) );
-
-		deviceRef->nextJobID = USBTechDevice::JA_CONNECT_DEVICE;
-		return;
-	}
-
-}
-
 void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode exitCode, USBTechDevice * deviceRef ) {
 	if ( logger->isDebugEnabled() )
 		logger->debug("JobDone Slot");
@@ -824,4 +836,8 @@ void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode 
 
 void HubDevice::userInfoReply(QString const& key, QString const& message, int replyBits ) {
 
+}
+void HubDevice::userInfoMessageRelay( const QString & key, const QString & message, int answerBits ) {
+	// just take message and emit again
+	emit userInfoMessage( key, message, answerBits );
 }

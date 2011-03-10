@@ -29,6 +29,9 @@ private:
 	TI_USB_VHCI * connector;
 	int portID;
 
+	uint16_t bytesToShort( uint8_t byteLSB, uint8_t byteMSB );
+	QByteArray * getDescriptorData( int type, int index = 0, int len = 0 );
+
 public slots:
 	void processURB( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,

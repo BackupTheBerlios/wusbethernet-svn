@@ -103,6 +103,17 @@ void mainFrame::runDiscovery() {
 					this, SLOT(userInfoMessageSlot(const QString &,const QString &,int) ) );
 			connect( this, SIGNAL( userInfoMessageReply(const QString &,const QString &,int)),
 					cc, SLOT(relayUserInfoReply(const QString &,const QString &,int)) );
+
+			// init USB-VHCI host interface
+			LinuxVHCIconnector * connector = LinuxVHCIconnector::getInstance();
+			if ( !connector || !connector->openInterface() ) {
+				userInfoMessageSlot( "none",
+						tr("<html>Cannot open OS interface (<em>VHCI</em>) to connect USB devices.<br>"
+								"<b>You will not be able to connect USB devices to system!</b></html>"), -1 );
+			} else {
+				// start USB interface
+				connector->startWork();
+			}
 		}
 		cc->start();
 

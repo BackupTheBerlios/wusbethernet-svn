@@ -140,7 +140,9 @@ private:
 	static bool isWorkInProgress;
 	static bool isWaitingForWork;
 
-
+	/** Timestamp indicating a time when a subsequent connection request can be performed
+	 *  (this is necessary to limit connection requests) */
+	long long nextConnectionRequestDeferValue;
 
 	/** A queue for "device connect" requests */
 	QQueue< struct DeviceConnectionData > deviceConnectionRequestQueue;

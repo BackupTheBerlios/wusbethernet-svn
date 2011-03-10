@@ -60,7 +60,7 @@ public:
 		product = QString("dev");
 		visualTreeWidgetItem = (QTreeWidgetItem *) 0;
 		sortNumber = 0;
-		portNum = 0;
+		portNum = -1;
 		isValid = false;
 		owned = false;
 		claimedByName = QString("n/a");
@@ -125,7 +125,7 @@ public:
 	QString claimedByIP;
 	/** Errorcode of last import/unimport operation (from network hub) */
 	int lastOperationErrorCode;
-	/** Port number for connection */
+	/** Port number (on network / UDP) for connection */
 	int connectionPortNum;
 
 	/** Connected USB-port number */

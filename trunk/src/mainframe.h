@@ -21,6 +21,8 @@ class QTreeWidgetItem;
 class mainFrame : public QMainWindow
 {
     Q_OBJECT
+    Q_CLASSINFO("author", "Sebastian Kolbe-Nusser")
+    Q_CLASSINFO("url", "http://wusbethernet.berlios.de/")
 
 public:
     mainFrame(QWidget *parent = 0);
