@@ -35,7 +35,7 @@ private:
 public slots:
 	void processURB( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData );
+			QByteArray * urbData, int expectedReturnLength );
 
 };
 

@@ -104,10 +104,10 @@ void USBconnectionWorker::queryDeviceInternal() {
 		logger->debug( QString("Open Connection result = %1").arg( openSuccess? "true": "false" ) );
 	if ( openSuccess ) {
 		while( deviceQueryEngine->hasNextURB() ) {
-			QByteArray bytesToSend = deviceQueryEngine->nextURB();
+			QByteArray * bytesToSend = new QByteArray(deviceQueryEngine->nextURB());
 			USBdeviceInfoProducer::RequestMetaData meta = deviceQueryEngine->getMetaData();
-			if ( bytesToSend.isNull() || !meta.isValid ) continue;
-			stack->sendURB( bytesToSend, meta.dataTransfer, meta.dataDirection, meta.endpoint, meta.expectedReturnLength );
+			if ( bytesToSend->isNull() || !meta.isValid ) continue;
+			stack->sendURB( bytesToSend, meta.dataTransfer, meta.dataDirection, meta.endpoint, 0, meta.expectedReturnLength );
 			if ( waitForIncomingURB( 1000 ) ) {
 				deviceQueryEngine->processAnswerURB( buffer );
 				buffer.clear();
@@ -149,6 +149,7 @@ void USBconnectionWorker::connectDevice( const QHostAddress & destinationAddress
 }
 
 void USBconnectionWorker::connectDeviceInternal() {
+
 	int portID = -1000;
 	if ( (portID = deviceUSBhostConnector->connectDevice( usbDeviceRef )) < 1 ) {
 		// problem with port, port number or similar
@@ -164,63 +165,75 @@ void USBconnectionWorker::connectDeviceInternal() {
 	logger->info(QString("Connected on port %1").arg( QString::number( portID) ));
 	vhciPortID = portID;
 
-	testDev = new VirtualUSBdevice( deviceUSBhostConnector, portID );
+	// open network connection
+	stack = parentDevice->createStackForDevice( usbDeviceRef->deviceID );
+	stack->registerURBreceiver( deviceUSBhostConnector );
+
+	bool openSuccess = stack->openConnection();
+	if ( ! openSuccess ) {
+		lastExitCode = WORK_DONE_FAILED;
+		logger->warn("Could not open connection to hub/device!");
+		deviceUSBhostConnector->disconnectDevice( portID );
+		return;
+	}
+
+//	testDev = new VirtualUSBdevice( deviceUSBhostConnector, portID );
 
 	switch ( portID ) {
 	case 1:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend1(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				Qt::QueuedConnection ); // Qt::QueuedConnection
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				Qt::QueuedConnection );
 		break;
 	case 2:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend2(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 3:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend3(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 4:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend4(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 5:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend5(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 6:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend6(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 7:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend7(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	case 8:
 		connect( deviceUSBhostConnector, SIGNAL( urbDataSend8(
-				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
-				testDev,
-				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *)),
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
 				Qt::QueuedConnection );
 		break;
 	}

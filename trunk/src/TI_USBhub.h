@@ -143,6 +143,10 @@ public:
 	 * version number. e.g. USB 2.0 is reported as 0x0200, USB 1.1 as 0x0110 and USB 1.0 as 0x0100.
 	 */
 	QString bcdUSB;
+	/**
+	 * Human readable form of USB specification number in form of "XX.YY".
+	 * @see bcdUSB
+	 */
 	QString sbcdUSB;
 	/** Device class<br>
 	 * The <tt>bDeviceClass</tt>, <tt>bDeviceSubClass</tt> and <tt>bDeviceProtocol</tt> are used by the

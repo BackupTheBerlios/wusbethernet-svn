@@ -25,11 +25,12 @@ class WusbMessageBuffer;
 class QTimer;
 class Logger;
 class USBconnectionWorker;
+class TI_USB_VHCI;
 
 #define WUSB_AZUREWAVE_SEND_HEADER_LEN		28
 #define WUSB_AZUREWAVE_SEND_SUBSQ_HEADER_LEN	4
 #define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN	24
-#define WUSB_AZUREWAVE_TIMER_INTERVAL		100
+#define WUSB_AZUREWAVE_TIMER_INTERVAL		75
 // maximum size of one network packet (protocol/device does not support bigger packets or fragments!)
 #define WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU	1472
 
@@ -64,8 +65,8 @@ public:
 	 */
 	bool sendURB( const char * urbData, int urbDataLen,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
-			int endpoint,
-			int receiveLength );
+			uint8_t endpoint, uint16_t transferFlags,
+			int receiveLength = 0);
 	/**
 	 * Send USB request block (<em>URB</em>) to device. The URB is wrapped with
 	 * headers and if necessary broken into smaller pieces for transport.<br>
@@ -77,17 +78,17 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	bool sendURB( const QByteArray & urbData,
+	bool sendURB( QByteArray * urbData,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
-			int endpoint,
-			int receiveLength );
+			uint8_t endpoint, uint16_t transferFlags,
+			int receiveLength = 0);
 
 
 	/**
-	 * Thread run loop.<br>
-	 * For technical reasons this method must be declared <em>public</em>...
+	 * Registers an URB receiver object.
+	 * This object will get all URB replys from network hub instead of sending per signal.
 	 */
-//	void run();
+	virtual void registerURBreceiver( TI_USB_VHCI * urbSink );
 
 	/**
 	 * Returns reference to logger.
@@ -127,6 +128,11 @@ private:
 
 	QTimer * connectionKeeperTimer;
 
+	/** Receiver of URBs from network hub */
+	TI_USB_VHCI * urbReceiver;
+	/** Reference data for last data packet sent */
+	void * packetRefData;
+
 	bool openSocket();
 	bool writeToSocket( const QByteArray & buffer );
 	bool openDevice();
@@ -141,10 +147,13 @@ private slots:
 	/** Receive routine to read data on UDP socket. Will be called upon signal from QT socket stack. */
 	void processPendingData();
 	void socketError(QAbstractSocket::SocketError socketError);
-	void processStatusMessage( WusbMessageBuffer::TypeOfMessage typeMsg );
+	void processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg );
 	void processURBmessage( QByteArray * urbBytes );
 	void informReceivedPacket( int newReceiverTAN, int lastSessionTAN, int packetCounter );
 	void timerInterrupt();
+	virtual void processURB(	void * refData, uint16_t transferFlags, uint8_t endPointNo,
+			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
+			QByteArray * urbData, int expectedReceiveLength );
 signals:
 	void receivedUDPdata(const QByteArray &);
 	void receivedURB( const QByteArray &);

@@ -15,7 +15,7 @@
 // quasi singleton instance map
 QMap<QString,Logger*> Logger::instanceMap;
 // static definition for date and time format in output
-QString Logger::dateFormat = QString("yyyy-MM-dd hh:mm:ss");
+QString Logger::dateFormat = QString("yyyy-MM-dd hh:mm:ss.zzz");
 // Template for one log entry
 QString Logger::logEntryTemplate = QString("[%1] (%2) %3 -\t%4");
 

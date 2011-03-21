@@ -108,8 +108,8 @@ void mainFrame::runDiscovery() {
 			LinuxVHCIconnector * connector = LinuxVHCIconnector::getInstance();
 			if ( !connector || !connector->openInterface() ) {
 				userInfoMessageSlot( "none",
-						tr("<html>Cannot open OS interface (<em>VHCI</em>) to connect USB devices.<br>"
-								"<b>You will not be able to connect USB devices to system!</b></html>"), -1 );
+						tr("<html>Cannot open OS interface (<em>VHCI</em>)!<br>"
+								"<b>You will not be able to connect<br>USB devices to system!</b></html>"), -1 );
 			} else {
 				// start USB interface
 				connector->startWork();

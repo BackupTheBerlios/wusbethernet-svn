@@ -13,6 +13,9 @@
 #define TI_WUSBSTACK_H_
 
 #include <QObject>
+#include <stdint.h>
+
+class TI_USB_VHCI;
 
 class TI_WusbStack : public QObject {
 	Q_OBJECT
@@ -65,7 +68,7 @@ public:
 	 */
 	virtual bool sendURB( const char * urbData, int urbDataLen,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
-			int endpoint,
+			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength ) = 0;
 	/**
 	 * Send USB request block (<em>URB</em>) to device. The URB is wrapped with
@@ -78,11 +81,16 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	virtual bool sendURB( const QByteArray & urbData,
+	virtual bool sendURB( QByteArray * urbData,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
-			int endpoint,
+			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength ) = 0;
 
+	/**
+	 * Registers an URB receiver object.
+	 * This object will get all URB replys from network hub instead of sending per signal.
+	 */
+	virtual void registerURBreceiver( TI_USB_VHCI * urbSink ) = 0;
 
 	static QString transferTypeToString( eDataTransferType dataTransferType ) {
 		switch ( dataTransferType ) {
@@ -108,6 +116,11 @@ public:
 			return QString::fromLatin1("NONE");
 		}
 	}
+
+public slots:
+	virtual void processURB( void * refData, uint16_t transferFlags, uint8_t endPointNo,
+			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
+			QByteArray * urbData, int expectedReceiveLength ) = 0;
 
 signals:
 	/**

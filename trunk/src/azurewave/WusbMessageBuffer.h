@@ -20,14 +20,15 @@ class WusbMessageBuffer : public QThread {
 	Q_OBJECT
 public:
 	/** Type of message given by header (read from network) */
-    enum TypeOfMessage {
+    enum eTypeOfMessage {
     	DEVICE_OPEN_SUCCESS,
     	DEVICE_CLOSE_SUCCESS,
     	DEVICE_ALIVE,
+    	DEVICE_STALL
     };
 
 
-	WusbMessageBuffer( WusbStack * owner );
+	WusbMessageBuffer( WusbStack * owner, int mtuSize = 1500 );
 	~WusbMessageBuffer();
 
 
@@ -55,7 +56,7 @@ private:
 	WusbStack * parentRef;
 	Logger * logger;
 	QByteArray * internalBuffer;
-	QByteArray lastReceivedPacket;
+	QByteArray * lastReceivedPacket;
 	int bytesLeftInCurrentTask;
 	struct WusbMessageBuffer::answerMessageParts incompleteMessage;
 	bool lastMessageWasIncomplete;
@@ -68,7 +69,7 @@ public slots:
 	 */
 	void receive( const QByteArray & bytes );
 signals:
-	void statusMessage( WusbMessageBuffer::TypeOfMessage );
+	void statusMessage( WusbMessageBuffer::eTypeOfMessage );
 	void urbMessage( QByteArray * );
 	void informPacketMeta( int newReceiverTAN, int lastSessionTAN, int packetCounter );
 };

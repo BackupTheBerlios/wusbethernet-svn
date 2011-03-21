@@ -466,11 +466,11 @@ short USButils::decodeBCDToShort( const QString & sBCDstring ) {
 	short retValue = (short) 0;
 	bool isOK(true);
 
-	int iValue = sBCDstring.left(2).toInt( &isOK );
+	int iValue = sBCDstring.left(2).toInt( &isOK, 16 );
 	if ( !isOK ) return (short) 0;
 	retValue |= (iValue << 8);
-	iValue = sBCDstring.mid(2,2).toInt( &isOK );
-	if ( !isOK ) return (short) 0;
+	iValue = sBCDstring.mid(2,2).toInt( &isOK, 16 );
+	if ( !isOK ) return retValue;
 	retValue |= (iValue);
 	return retValue;
 }

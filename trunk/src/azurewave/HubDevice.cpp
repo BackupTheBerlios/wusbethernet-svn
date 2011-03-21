@@ -91,7 +91,7 @@ Logger * HubDevice::getLogger() {
 TI_WusbStack * HubDevice::createStackForDevice( const QString & deviceID ) {
 	USBTechDevice & deviceRef = findDeviceByID( deviceID );
 	if ( deviceRef.isValid ) {
-		Logger * logger = Logger::getLogger( QString("USBConn") + QString::number( deviceRef.connectionPortNum) );
+		Logger * logger = Logger::getLogger( QString("USBConn") + QString::number( deviceRef.portNum ) );
 		return new WusbStack( logger, QHostAddress(ipAddress), deviceRef.connectionPortNum );
 	} else
 		return NULL;
@@ -241,6 +241,9 @@ void HubDevice::receiveData( ControlMessageBuffer::eTypeOfMessage type, const QB
 			case USBTechDevice::JA_CONNECT_DEVICE:
 				// connect to virtual USB port
 				connectDeviceJob( usedDevice );
+				break;
+			case USBTechDevice::JA_NONE:
+				// doing virtually nothing - keeps the compiler happy
 				break;
 			}
 		}
@@ -753,15 +756,12 @@ void HubDevice::connectDevice( USBTechDevice * deviceRef ) {
 	}
 
 	// Register connection on control channel
-/*
- XXX
- 		sendImportDeviceMessage( deviceRef->deviceID,
-				QString::number(deviceRef->idVendor, 16),
-				QString::number(deviceRef->idProduct, 16) );
+	sendImportDeviceMessage( deviceRef->deviceID,
+			QString::number(deviceRef->idVendor, 16),
+			QString::number(deviceRef->idProduct, 16) );
 
-		deviceRef->nextJobID = USBTechDevice::JA_CONNECT_DEVICE;
-*/
-	connectDeviceJob( *deviceRef );	// XXX
+	deviceRef->nextJobID = USBTechDevice::JA_CONNECT_DEVICE;
+	//	connectDeviceJob( *deviceRef );	// XXX
 }
 
 void HubDevice::connectDeviceJob( USBTechDevice & deviceRef ) {
@@ -783,8 +783,8 @@ void HubDevice::connectDeviceJob( USBTechDevice & deviceRef ) {
 
 void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 	if ( ! deviceRef ) return;
-	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ||
-			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
+	if ( ! deviceRef->isValid || deviceRef->status != USBTechDevice::PS_Claimed ) {
+//			(deviceRef->connWorker && deviceRef->connWorker->getLastExitCode() == USBconnectionWorker::WORK_DONE_STILL_RUNNING ) ) {
 		logger->warn( QString("Disconnect OP: Device %1 not valid or not available (valid=%2, owned=%3, status=%4)").arg(
 				deviceRef->deviceID,
 				(deviceRef->isValid? QString("true") : QString("false")),
@@ -806,6 +806,7 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 				logger->info(QString("Disconnect requested for device: %1").arg( deviceRef->deviceID ) );
 			deviceRef->connWorker->disconnectDevice();
 		}
+		wantServerInfoRequest = true;
 	} else if ( deviceRef->status == USBTechDevice::PS_Claimed && !deviceRef->owned ) {
 		// send "unimport" message to hub
 		sendUnimportMessage( deviceRef->deviceID, QString::null );
@@ -819,13 +820,17 @@ void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode 
 	if ( logger->isDebugEnabled() )
 		logger->debug("JobDone Slot");
 	const QString & resultString = deviceRef->connWorker->getResultString();
-	if ( resultString.isNull() || exitCode == USBconnectionWorker::WORK_DONE_FAILED )
-		logger->warn( "No result/failed from USB device operation!" );
-	else {
-		if ( logger->isTraceEnabled() )
-			logger->trace( resultString );
-		TextInfoView & tiv = TextInfoView::getInstance();
-		tiv.showText( resultString );
+	if ( !resultString.isNull() ) {
+		if ( exitCode == USBconnectionWorker::WORK_DONE_FAILED )
+			logger->warn( "No result/failed from USB device operation!" );
+		else {
+			if ( logger->isTraceEnabled() )
+				logger->trace( resultString );
+			TextInfoView & tiv = TextInfoView::getInstance();
+			tiv.showText( resultString );
+		}
+	} else if ( exitCode == USBconnectionWorker::WORK_DONE_FAILED ) {
+		logger->warn( QString("No result/failed from USB device operation (no info)") );
 	}
 /*	disconnect( deviceRef.connWorker, SIGNAL(workIsDone(USBconnectionWorker::WorkDoneExitCode)),
 			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::WorkDoneExitCode)) );
@@ -835,7 +840,7 @@ void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode 
 
 
 void HubDevice::userInfoReply(QString const& key, QString const& message, int replyBits ) {
-
+	// TODO
 }
 void HubDevice::userInfoMessageRelay( const QString & key, const QString & message, int answerBits ) {
 	// just take message and emit again

@@ -142,7 +142,7 @@ QByteArray * VirtualUSBdevice::getDescriptorData( int type, int index, int len )
 void VirtualUSBdevice::processURB(
 		void * refData, uint16_t transferFlags, uint8_t endPointNo,
 		TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-		QByteArray * urbData )
+		QByteArray * urbData, int expectedReturnLength )
 {
 	printf("XXX processURB\n");
 
@@ -152,7 +152,7 @@ void VirtualUSBdevice::processURB(
 					TI_WusbStack::transferTypeToString(transferType),
 					TI_WusbStack::dataDirectionToString(dDirection),
 					QString::number(endPointNo) ));
-		connector->giveBackAnswerURB( refData, portID, false, NULL );
+		connector->giveBackAnswerURB( refData, false, NULL );
 		return;
 	}
 	if ( !urbData ) {
@@ -161,7 +161,7 @@ void VirtualUSBdevice::processURB(
 					TI_WusbStack::transferTypeToString(transferType),
 					TI_WusbStack::dataDirectionToString(dDirection),
 					QString::number(endPointNo) ));
-		connector->giveBackAnswerURB( refData, portID, false, NULL );
+		connector->giveBackAnswerURB( refData, false, NULL );
 		return;
 	}
 
@@ -172,7 +172,7 @@ void VirtualUSBdevice::processURB(
 	if ( requestType == 0x0 ) {
 		logger->debug(QString("VirtualDevice: IN packet requestType=%1 request=%2").
 				arg(QString::number(requestType),QString::number(request) ) );
-		connector->giveBackAnswerURB( refData, portID, true, NULL );
+		connector->giveBackAnswerURB( refData, true, NULL );
 		return;
 	}
 	if ( requestType == 0x80 ) {
@@ -183,14 +183,17 @@ void VirtualUSBdevice::processURB(
 //			int wIndex  = bytesToShort( urbData->at(4), urbData->at(5) );
 			QByteArray * returnData = getDescriptorData( urbData->at(3), urbData->at(2), wLength );
 			if ( returnData )
-				connector->giveBackAnswerURB( refData, portID, true, returnData );
+				connector->giveBackAnswerURB( refData, true, returnData );
 			else
-				connector->giveBackAnswerURB( refData, portID, false, NULL );
+				connector->giveBackAnswerURB( refData, false, NULL );
+
+			if ( urbData ) delete urbData;
 			return;
 		}
 	}
 
-	connector->giveBackAnswerURB( refData, portID, false, NULL );
+	connector->giveBackAnswerURB( refData, false, NULL );
+	if ( urbData ) delete urbData;
 }
 
 

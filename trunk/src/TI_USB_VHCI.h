@@ -59,8 +59,11 @@ public:
 	virtual int getAndReservePortID() = 0;
 	/**
 	 * Passes back an answer to host for last request.
+	 * @param	refData		Pointer to reference data (was given when sending data packet)
+	 * @param	isOK		If request was acknowledged by device
+	 * @param	urbData		Byte array with raw URB data from device
 	 */
-	virtual void giveBackAnswerURB( void * refData, int portID, bool isOK, QByteArray * urbData ) = 0;
+	virtual void giveBackAnswerURB( void * refData, bool isOK, QByteArray * urbData ) = 0;
 };
 
 #endif /* TI_USB_VHCI_H_ */

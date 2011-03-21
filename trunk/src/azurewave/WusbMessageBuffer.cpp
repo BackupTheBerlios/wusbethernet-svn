@@ -15,17 +15,20 @@
 
 bool WusbMessageBuffer::isFirstInstance = true;
 
-WusbMessageBuffer::WusbMessageBuffer( WusbStack * owner )
+WusbMessageBuffer::WusbMessageBuffer( WusbStack * owner, int mtuSize )
 : QThread( (QObject*) owner ) {
 	parentRef = owner;
 	logger = owner->getLogger();
 	lastMessageWasIncomplete = false;
 	incompleteMessage.contentURB = NULL;
+	if ( mtuSize < 1500 ) mtuSize = 1500;
+	lastReceivedPacket = new QByteArray();
+	lastReceivedPacket->reserve( mtuSize );
 
 	// for usage in event queueing we have to register TypeOfMessage in QT-Metatype system
 	// XXX this is not threadsafe...
 	if ( WusbMessageBuffer::isFirstInstance ) {
-		qRegisterMetaType<WusbMessageBuffer::TypeOfMessage>("WusbMessageBuffer::TypeOfMessage");
+		qRegisterMetaType<WusbMessageBuffer::eTypeOfMessage>("WusbMessageBuffer::eTypeOfMessage");
 		WusbMessageBuffer::isFirstInstance = false;
 	}
 
@@ -45,6 +48,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 	if ( bytes.length() == 4 ) {
 		// Device status message (open/close/etc.)
 		if ( bytes[0] == 0x0 && bytes[1] == 0x0 && bytes[3] == 0x0 ) {
+			// special treatment for case: 00 00 10 00
 			uint8_t typeByte  = bytes[2];
 			switch( typeByte ) {
 			case 0x04:
@@ -72,10 +76,21 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 				break;
 			}
 		}
-		if ( bytes[2] == 0x10 )
+		if ( bytes[2] == 0x10 ) {
+
 			emit statusMessage( DEVICE_ALIVE );
+		}
 		return;
 	} // 4 bytes messages
+
+	if ( bytes == (*lastReceivedPacket) ) {
+		// Duplicate packet received!
+		if ( logger->isDebugEnabled() )
+			logger->debug(QString("Duplicate packet received with length %1").arg( QString::number(bytes.length() ) ) );
+		return;
+	}
+	lastReceivedPacket->clear();
+	lastReceivedPacket->append( bytes );
 
 	if ( logger->isDebugEnabled() )
 		logger->debug(QString("Received message from hub: %1").arg(WusbHelperLib::messageToString(bytes,0)) );
