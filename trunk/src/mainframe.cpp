@@ -22,7 +22,7 @@
 #include <QMessageBox>
 #include "QMenu"
 
-extern bool applicationShouldRun;
+extern volatile bool applicationShouldRun;
 
 mainFrame::mainFrame(QWidget *parent)
     : QMainWindow(parent)
@@ -116,23 +116,6 @@ void mainFrame::runDiscovery() {
 			}
 		}
 		cc->start();
-
-/*
-		WusbStack *stack = new WusbStack( this, );
-		bool result = stack->openConnection();
-		LogWriter::info(QString("Open Connection result = %1").arg( result? "true": "false" ) );
-		if ( result ) {
-			::sleep(2);
-			stack->sendURB( USButils::createDeviceDescriptorRequest(), WusbStack::CONTROL_TRANSFER, WusbStack::DATADIRECTION_IN,0, 0x12 );
-			::sleep(2);
-			result = stack->closeConnection();
-			LogWriter::info(QString("Close Connection result = %1").arg( result? "true": "false" ) );
-		}
-*/
-/*		USBconnectionWorker * worker = new USBconnectionWorker( this );
-		connect( worker, SIGNAL(workIsDone(USBconnectionWorker::WorkDoneExitCode)), this, SLOT(blubb(USBconnectionWorker::WorkDoneExitCode)));
-		worker->queryDevice(QHostAddress("127.0.0.1"), 8002 );
-*/
 	}
 }
 

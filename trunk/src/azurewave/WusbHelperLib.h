@@ -24,7 +24,7 @@ public:
 
 	static void appendTransactionHeader( QByteArray & buffer, int sendTAN, int recTAN, int tanCount );
 	static void appendMarker55Header( QByteArray & buffer, uint16_t xferMode = 0 );
-	static void appendPacketCountHeader( QByteArray & buffer );
+	static unsigned int appendPacketIDHeader( QByteArray & buffer );
 	static void appendPacketLength( QByteArray & buffer, unsigned int lenValue );
 
 

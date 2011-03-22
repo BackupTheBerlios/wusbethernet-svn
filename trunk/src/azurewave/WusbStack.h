@@ -15,6 +15,7 @@
 #include <QHostAddress>
 #include <QLinkedList>
 #include <QQueue>
+#include <QHash>
 #include <QMutex>
 #include <QAbstractSocket>
 
@@ -27,12 +28,20 @@ class Logger;
 class USBconnectionWorker;
 class TI_USB_VHCI;
 
-#define WUSB_AZUREWAVE_SEND_HEADER_LEN		28
+/** Header length of a regular URB packet */
+#define WUSB_AZUREWAVE_SEND_HEADER_LEN			28
+/** Header length of a continued packet (packet bigger than MTU) */
 #define WUSB_AZUREWAVE_SEND_SUBSQ_HEADER_LEN	4
-#define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN	24
-#define WUSB_AZUREWAVE_TIMER_INTERVAL		75
-// maximum size of one network packet (protocol/device does not support bigger packets or fragments!)
-#define WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU	1472
+/** Header length of a received packet (answer packet from hub) */
+#define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN		24
+/** Basic timer interval to check for retransmit or to send ack/idle/keep alive messages */
+#define WUSB_AZUREWAVE_TIMER_INTERVAL			75L
+/** maximum size of one network packet (protocol/device does not support bigger packets or fragments!) */
+#define WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU		1472
+/** after this time a ACK is send to hub when no further packets (URB) are ready to send  */
+#define WUSB_AZUREWAVE_TIMER_SEND_ACK			100L
+/** after this time of idle running a KEEP ALIVE message is send to hub */
+#define WUSB_AZUREWAVE_TIMER_SEND_KEEP_ALIVE	2000L
 
 class WusbStack : public TI_WusbStack {
 	Q_OBJECT
@@ -63,7 +72,7 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	bool sendURB( const char * urbData, int urbDataLen,
+	bool sendURB( void * refData, const char * urbData, int urbDataLen,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength = 0);
@@ -78,7 +87,7 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	bool sendURB( QByteArray * urbData,
+	bool sendURB( void * refData, QByteArray * urbData,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength = 0);
@@ -132,6 +141,7 @@ private:
 	TI_USB_VHCI * urbReceiver;
 	/** Reference data for last data packet sent */
 	void * packetRefData;
+	QHash<unsigned int, void*> packetRefDataByPacketID;
 
 	bool openSocket();
 	bool writeToSocket( const QByteArray & buffer );
@@ -146,12 +156,15 @@ private:
 private slots:
 	/** Receive routine to read data on UDP socket. Will be called upon signal from QT socket stack. */
 	void processPendingData();
+	/** Signal from socket that an uncorrectable (on socket layer) error occured */
 	void socketError(QAbstractSocket::SocketError socketError);
+	/** Status of connection changed or some special packet received */
 	void processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg );
-	void processURBmessage( QByteArray * urbBytes );
-	void informReceivedPacket( int newReceiverTAN, int lastSessionTAN, int packetCounter );
+	/** Receive of a URB pacekt from network */
+	void processURBmessage( unsigned int packetID, QByteArray * urbBytes );
+	void informReceivedPacket( int newReceiverTAN, int lastSessionTAN, unsigned int packetCounter );
 	void timerInterrupt();
-	virtual void processURB(	void * refData, uint16_t transferFlags, uint8_t endPointNo,
+	virtual void processURB( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
 			QByteArray * urbData, int expectedReceiveLength );
 signals:

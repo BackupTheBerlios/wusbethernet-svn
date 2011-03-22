@@ -58,6 +58,7 @@ public:
 	 * Send USB request block (<em>URB</em>) to device. The URB is wrapped with
 	 * headers and if necessary broken into smaller pieces for transport.<br>
 	 * PRE: network connection to device initialized and not in error state.
+	 * @param	refData				Reference date for this data packet; will be returned on received packets
 	 * @param	urbData				URB data (raw data, NOT 0x0 terminated)
 	 * @param	urbDataLen			Length of urb data
 	 * @param	dataTransferType	Transfer type of URB
@@ -66,7 +67,7 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	virtual bool sendURB( const char * urbData, int urbDataLen,
+	virtual bool sendURB( void * refData, const char * urbData, int urbDataLen,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength ) = 0;
@@ -74,6 +75,7 @@ public:
 	 * Send USB request block (<em>URB</em>) to device. The URB is wrapped with
 	 * headers and if necessary broken into smaller pieces for transport.<br>
 	 * PRE: network connection to device initialized and not in error state.
+	 * @param	refData				Reference date for this data packet; will be returned on received packets
 	 * @param	urbData
 	 * @param	dataTransferType	Transfer type of URB
 	 * @param	directionType		Direction of data transfer
@@ -81,7 +83,7 @@ public:
 	 * @param	receiveLength		Length (in bytes) of expected respond from device
 	 * @return	<code>true</code> if no fatal errors occur and connection is active.
 	 */
-	virtual bool sendURB( QByteArray * urbData,
+	virtual bool sendURB( void * refData, QByteArray * urbData,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
 			int receiveLength ) = 0;

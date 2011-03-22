@@ -107,7 +107,7 @@ void USBconnectionWorker::queryDeviceInternal() {
 			QByteArray * bytesToSend = new QByteArray(deviceQueryEngine->nextURB());
 			USBdeviceInfoProducer::RequestMetaData meta = deviceQueryEngine->getMetaData();
 			if ( bytesToSend->isNull() || !meta.isValid ) continue;
-			stack->sendURB( bytesToSend, meta.dataTransfer, meta.dataDirection, meta.endpoint, 0, meta.expectedReturnLength );
+			stack->sendURB( NULL, bytesToSend, meta.dataTransfer, meta.dataDirection, meta.endpoint, 0, meta.expectedReturnLength );
 			if ( waitForIncomingURB( 1000 ) ) {
 				deviceQueryEngine->processAnswerURB( buffer );
 				buffer.clear();
@@ -116,7 +116,7 @@ void USBconnectionWorker::queryDeviceInternal() {
 		busyWaiting( 5000 );
 		bool closeSuccess = stack->closeConnection();
 		if ( logger->isDebugEnabled() )
-			logger->debug (QString::fromLatin1("Close Connection result = %1").arg( closeSuccess? "true": "false" ) );
+			logger->debug (QString("Close Connection result = %1").arg( closeSuccess? "true": "false" ) );
 	}
 	if ( ! openSuccess || !closeSuccess )
 		lastExitCode = WORK_DONE_FAILED;

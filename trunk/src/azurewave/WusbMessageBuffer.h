@@ -69,9 +69,11 @@ public slots:
 	 */
 	void receive( const QByteArray & bytes );
 signals:
+	/** Status changed (or an event occured) on/in connection */
 	void statusMessage( WusbMessageBuffer::eTypeOfMessage );
-	void urbMessage( QByteArray * );
-	void informPacketMeta( int newReceiverTAN, int lastSessionTAN, int packetCounter );
+	/** An URB was completely received and can be processed */
+	void urbMessage( unsigned int packetID, QByteArray * urbData );
+	void informPacketMeta( int newReceiverTAN, int lastSessionTAN, unsigned int packetCounter );
 };
 
 #endif /* WUSBMESSAGEBUFFER_H_ */

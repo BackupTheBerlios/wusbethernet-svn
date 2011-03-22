@@ -19,7 +19,7 @@
 
 using namespace std;
 
-extern bool applicationShouldRun;
+extern volatile bool applicationShouldRun;
 
 // singleton instance initialization
 LinuxVHCIconnector *LinuxVHCIconnector::instance = NULL;
@@ -106,8 +106,8 @@ bool LinuxVHCIconnector::openInterface() {
 		hcd->add_work_enqueued_callback( usb::vhci::hcd::callback( &signal_work_enqueued, NULL ) );
 	} catch ( std::exception &ex ) {
 		hcd = NULL;
-		logger->error(QString::fromLatin1("Cannot open virtual host controller device: '%1' Error: %2").
-				arg( QString(USB_VHCI_DEVICE_FILE), QString(ex.what()) ) );
+		logger->error(QString::fromLatin1("Cannot open virtual host controller device: '%1'").
+				arg( QString(USB_VHCI_DEVICE_FILE) ) ); // QString(ex.what())
 		logger->error("Make sure kernel modules (usb-vhci-hcd AND usb-vhci-iocifc) are loaded!");
 		kernelInterfaceUsable = false;
 		return false;
@@ -224,6 +224,12 @@ int LinuxVHCIconnector::getUnusedPort() {
 	return -1;
 }
 
+/*
+ * Creating a standard device descriptor from device description meta data (<tt>USBTechDevice</tt>).
+ * This is needed because most operating systems "probe" for this description <b>before</b>
+ * device enumeration. Typically after this "probe" the port will perform a reset and
+ * normal operation can begin (this will usually start by querying the device descriptor...).
+ */
 void LinuxVHCIconnector::createDeviceDescriptorFromDeviceDescription( USBTechDevice * device, QByteArray & bytes ) {
 	if ( !device ) return;
 	// Creating an standard device descriptor
@@ -303,6 +309,13 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 							messageToString( buffer, buffer.length() ) ) );
 		}
 	} else {
+		int lenData = urbData->get_buffer_actual();
+		buffer.reserve(lenData);	// reserve at least length of data section
+		// additional data to transfer: copy to buffer
+		if ( lenData >  0 ) {
+			uint8_t* dataBuf = urbData->get_buffer();
+			buffer.append( (const char*) dataBuf, lenData );
+		}
 		if ( logger->isDebugEnabled() ) {
 			QString xferModeStr;
 			switch ( urbData->get_type() ){
@@ -345,7 +358,7 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 }
 
 void LinuxVHCIconnector::giveBackAnswerURB( void * refData, bool isOK, QByteArray * urbData ) {
-	printf("XXX giveBackAnswerURB isOK=%s!\n", (isOK?"1":"0") );
+//	printf("XXX giveBackAnswerURB isOK=%s!\n", (isOK?"1":"0") );
 
 	usb::vhci::process_urb_work * refURB = reinterpret_cast<usb::vhci::process_urb_work*>(refData);
 	if ( !refURB ) return;
@@ -358,7 +371,6 @@ void LinuxVHCIconnector::giveBackAnswerURB( void * refData, bool isOK, QByteArra
 	deviceReplyDataQueueMutex->lock();
 	deviceReplyDataQueue.enqueue( replyData );
 	deviceReplyDataQueueMutex->unlock();
-	printf("XXX giveBackAnswerURB finished!\n" );
 	// wake up working thread
 	workInProgressCondition->wakeAll();
 }
@@ -380,10 +392,11 @@ bool LinuxVHCIconnector::processOutstandingConnectionRequests() {
 	if ( connRequest.operationFlag == 2 ) {
 		// disconnect operation
 		if ( connRequest.port <= 0 ) return false;
+//		if ( portStatusList[connRequest.port -1].lastURBhandle )
+//			hcd->cancel_process_urb_work( portStatusList[connRequest.port -1].lastURBhandle );
 		hcd->port_disconnect( connRequest.port );
-		if ( portStatusList[connRequest.port -1].lastURBhandle )
-			hcd->cancel_process_urb_work( portStatusList[connRequest.port -1].lastURBhandle );
 		portStatusList[connRequest.port -1].portInUse = false;
+		portStatusList[connRequest.port -1].lastURBhandle = 0L;
 	} else {
 		// connect operation
 		if ( connRequest.port <= 0 )
@@ -429,7 +442,6 @@ bool LinuxVHCIconnector::processOutstandingURBReplys() {
 	while ( !deviceReplyDataQueue.isEmpty() ) {
 		struct DeviceURBreplyData replyData = deviceReplyDataQueue.dequeue();
 		int portID = replyData.refURB->get_port();
-		printf("XXX processOutstandingURBReplys!\n");
 
 		if ( portStatusList[portID-1].lastURBhandle )
 			portStatusList[portID-1].lastURBhandle = 0;
@@ -487,10 +499,10 @@ void LinuxVHCIconnector::run() {
 			workInProgressMutex->unlock();
 		}
 
-		// process device connect / disconnect operations
-		processOutstandingConnectionRequests();
 		// process URB replys
 		processOutstandingURBReplys();
+		// process device connect / disconnect operations
+		processOutstandingConnectionRequests();
 
 		// TODO check for memory allocation error / exception
 		// get something to do from host controller

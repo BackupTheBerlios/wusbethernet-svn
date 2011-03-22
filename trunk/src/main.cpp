@@ -21,7 +21,7 @@
 
 
 /** Global flag: Application should run (and is not yet terminated) */
-bool applicationShouldRun(true);
+volatile bool applicationShouldRun(true);
 
 /** Initializes the logging infrastructure */
 void initLogger( ConfigManager & conf ) {

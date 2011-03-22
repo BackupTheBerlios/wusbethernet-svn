@@ -52,16 +52,17 @@ WusbStack::WusbStack( Logger *parentLogger, const QHostAddress & destinationAddr
 	connectionKeeperTimer = NULL;
 	urbReceiver = NULL;
 	packetRefData = NULL;
+	packetRefDataByPacketID.clear();
 
 	// init receive message buffer
 	messageBuffer = new WusbMessageBuffer( this, maxMTU );
 
 	connect( messageBuffer, SIGNAL(statusMessage(WusbMessageBuffer::eTypeOfMessage)),
 			this, SLOT(processStatusMessage(WusbMessageBuffer::eTypeOfMessage)), Qt::QueuedConnection );
-	connect( messageBuffer, SIGNAL(urbMessage( QByteArray * )),
-			this, SLOT(processURBmessage( QByteArray * )), Qt::QueuedConnection );
-	connect( messageBuffer, SIGNAL(informPacketMeta( int, int, int )),
-			this, SLOT(informReceivedPacket( int, int, int )), Qt::QueuedConnection );
+	connect( messageBuffer, SIGNAL(urbMessage( unsigned int, QByteArray* )),
+			this, SLOT(processURBmessage( unsigned int, QByteArray* )), Qt::QueuedConnection );
+	connect( messageBuffer, SIGNAL(informPacketMeta( int, int, unsigned int )),
+			this, SLOT(informReceivedPacket( int, int, unsigned int )), Qt::QueuedConnection );
 
 	connect( this, SIGNAL(receivedUDPdata(const QByteArray &)),
 			messageBuffer, SLOT(receive(const QByteArray &)), Qt::QueuedConnection);
@@ -251,32 +252,40 @@ void WusbStack::timerInterrupt() {
 
 	// Since more than 100ms nothing sent? (and workaround for clock warping...)
 	// We need to send idle (or receive OK) messages:
-	// - when no real communcation is needed (a.k.a. keep alive)  (5 secs)
+	// - when no real communcation is needed (a.k.a. keep alive)  (2 secs)
 	// - when we received a message from hub but have no new message to send (receive ack) (>100ms)
-	if ( lastPacketSendTimeMillis > now || now - lastPacketSendTimeMillis > 100L ) {
-		if ( now - lastSendAlivePacket >= 2000L || lastSendAlivePacket < lastPacketSendTimeMillis )
+	if ( lastPacketSendTimeMillis > now || now - lastPacketSendTimeMillis > WUSB_AZUREWAVE_TIMER_SEND_ACK ) {
+		if ( now - lastSendAlivePacket >= WUSB_AZUREWAVE_TIMER_SEND_KEEP_ALIVE ||
+				lastSendAlivePacket < lastPacketSendTimeMillis )
 			sendIdleMessage();
 	}
 }
 
-bool WusbStack::sendURB(
+bool WusbStack::sendURB (
+		void * refData,
 		const char * urbData,
 		int urbDataLen,
 		eDataTransferType dataTransferType,
 		eDataDirectionType directionType,
-		uint8_t endpoint, uint16_t transferFlags,
-		int receiveLength  ) {
+		uint8_t endpoint,
+		uint16_t transferFlags,
+		int receiveLength ) {
 
 	// just delegate this to methode below...
 	QByteArray * urbBytes = new QByteArray( urbData, urbDataLen );
-	return sendURB( urbBytes, dataTransferType, directionType, endpoint, receiveLength );
+	return sendURB( refData, urbBytes, dataTransferType, directionType, endpoint, transferFlags, receiveLength );
 }
 
-bool WusbStack::sendURB( QByteArray * urbData,
-		eDataTransferType dataTransferType, eDataDirectionType directionType,
-		uint8_t endpoint, uint16_t transferFlags, int receiveLength ) {
+bool WusbStack::sendURB (
+		void * refData,
+		QByteArray * urbData,
+		eDataTransferType dataTransferType,
+		eDataDirectionType directionType,
+		uint8_t endpoint,
+		uint16_t transferFlags,
+		int receiveLength ) {
+
 	int packetLen =	urbData->length() + WUSB_AZUREWAVE_SEND_HEADER_LEN;	// +28 bytes header
-	// TODO check if packetLen exceeds MTU size and split packet eventually
 
 	QLinkedList<QByteArray> messageSplit;
 	if ( packetLen > maxMTU ) {
@@ -310,26 +319,51 @@ bool WusbStack::sendURB( QByteArray * urbData,
 		currentTransactionNum = 0xff;
 	else
 		currentTransactionNum = qMax(currentSendTransactionNum, currentReceiveTransactionNum);
+	uint16_t xferMode = 0;
+	switch( dataTransferType ) {
+	case CONTROL_TRANSFER:
+		xferMode = 0;
+		break;
+	case BULK_TRANSFER:
+		xferMode = 0;	// XXX
+		break;
+	case INTERRUPT_TRANSFER:
+		xferMode = 0x0a;
+		break;
+	case ISOCHRONOUS_TRANSFER:
+		// isochronous transfer is enabled by transfer flag (?)
+		xferMode = 0;
+		break;
+	}
 	WusbHelperLib::appendTransactionHeader( buffer, currentSendTransactionNum, currentReceiveTransactionNum, currentTransactionNum );
-	WusbHelperLib::appendMarker55Header( buffer );	// TODO transfer mode
-	WusbHelperLib::appendPacketCountHeader( buffer );
+	WusbHelperLib::appendMarker55Header( buffer, xferMode );
+	unsigned int packetID = WusbHelperLib::appendPacketIDHeader( buffer );
 
-	buffer.append( 0x80 );
+	// storing the packetID of prepared (and hopefully sent) packet
+	if ( refData && dataTransferType != ISOCHRONOUS_TRANSFER )
+		packetRefDataByPacketID[packetID] = refData;
+
+	// TODO data direction, endpoint and special treatment of some transfer types
+	buffer.append( 0x80 >> endpoint );
 	buffer.append( '\0' );
-	buffer.append( '\0' );
+	// XXX WTF?
+	if ( directionType == TI_WusbStack::DATADIRECTION_IN && dataTransferType != CONTROL_TRANSFER )
+		buffer.append( 0x80 );
+	else
+		buffer.append( '\0' );
 	if ( directionType == TI_WusbStack::DATADIRECTION_IN )
 		buffer.append( 0x80 );
 	else
 		buffer.append('\0' );
 	buffer.append( '\0' );
 	buffer.append( '\0' );
-	buffer.append( '\0' );
-	buffer.append( '\0' );
+	buffer.append( (transferFlags & 0xff00) >> 8 );
+	buffer.append( transferFlags & 0xff );
 
 	WusbHelperLib::appendPacketLength( buffer, receiveLength );
 	WusbHelperLib::appendPacketLength( buffer, urbData->length() );
 
-	// at last the URB itself
+	// The first (eventually the only) packet with URB
 	if ( messageSplit.isEmpty() )
 		buffer.append( *urbData );
 	else
@@ -364,13 +398,17 @@ bool WusbStack::sendURB( QByteArray * urbData,
 	}
 }
 
+/*
+ * Slot for incoming (send to network) URBs.
+ */
 void WusbStack::processURB(
 		void * refData, uint16_t transferFlags, uint8_t endPointNo,
 		TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
 		QByteArray * urbData, int expectedReceiveLength ) {
 
+	// the last packet
 	packetRefData = refData;
-	sendURB( urbData, transferType, dDirection, endPointNo, transferFlags, expectedReceiveLength );
+	sendURB( refData, urbData, transferType, dDirection, endPointNo, transferFlags, expectedReceiveLength );
 }
 
 void WusbStack::registerURBreceiver( TI_USB_VHCI * urbSink ) {
@@ -419,15 +457,25 @@ void WusbStack::processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg 
 		break;
 	}
 }
-void WusbStack::processURBmessage( QByteArray * urbBytes ) {
+/*
+ * Receive URB from network (MessageBuffer).
+ */
+void WusbStack::processURBmessage( unsigned int packetID, QByteArray * urbBytes ) {
 	if ( logger->isTraceEnabled() )
 		logger->trace(QString("Received URB: %1").
 				arg( WusbHelperLib::messageToString( *urbBytes, urbBytes->length() ) ));
 
 	if ( urbReceiver ) {
 		// Procedure for passing URB to OS integration module
-		urbReceiver->giveBackAnswerURB( packetRefData, true, urbBytes );
-		packetRefData = NULL;	// XXX this may be not true for isochronous transfer!
+		if ( packetID && packetRefDataByPacketID.contains( packetID ) ) {
+			// packet lookup positiv -> use reference data from hash
+			urbReceiver->giveBackAnswerURB( packetRefDataByPacketID[ packetID ], true, urbBytes );
+			packetRefDataByPacketID.remove( packetID );
+		} else {
+			logger->warn(QString("Fallback of packet ref data (ID = 0x%1)").arg( QString::number( packetID, 16) ) );
+			urbReceiver->giveBackAnswerURB( packetRefData, true, urbBytes );
+			packetRefData = NULL;	// XXX this may be not true for isochronous transfer!
+		}
 	} else {
 		// Procedure for passing URB to internal processing (more or less debug code)
 		emit receivedURB( *urbBytes );
@@ -435,7 +483,7 @@ void WusbStack::processURBmessage( QByteArray * urbBytes ) {
 	}
 }
 
-void WusbStack::informReceivedPacket( int newReceiverTAN, int lastSessionTAN, int packetCounter ) {
+void WusbStack::informReceivedPacket( int newReceiverTAN, int lastSessionTAN, unsigned int packetCounter ) {
 	if ( logger->isTraceEnabled() )
 		logger->trace(QString("WusbStack::informReceivedPacket: %1 %2 %3").arg(
 				QString::number(newReceiverTAN),QString::number(lastSessionTAN),QString::number(packetCounter,16) ) );

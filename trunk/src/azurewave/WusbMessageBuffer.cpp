@@ -102,11 +102,11 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 			incompleteMessage.contentURB->append( bytes.mid( 4 ) );	// append all URB data to buffer
 			if ( incompleteMessage.contentLength == incompleteMessage.contentURB->size() ) {
 				// message completed - emit all data and continue normal
-				emit urbMessage( incompleteMessage.contentURB );
+				emit urbMessage( contMsg.packetNum, incompleteMessage.contentURB );
 				lastMessageWasIncomplete = false;
 			} else if (incompleteMessage.contentLength < incompleteMessage.contentURB->size() ) {
 				// Houston we have a problem...
-				logger->warn(QString::fromAscii("Received more data than expected! (%1 > %2)").arg(
+				logger->warn(QString("Received more data than expected! (%1 > %2)").arg(
 						QString::number( incompleteMessage.contentURB->size() ), QString::number( incompleteMessage.contentLength ) ) );
 			}
 		}
@@ -120,7 +120,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 	if ( message.isCorrect && message.isComplete ) {
 		lastMessageWasIncomplete = false;
 		emit informPacketMeta( message.receiverTAN, message.TAN, message.packetNum );
-		emit urbMessage( message.contentURB );
+		emit urbMessage( message.packetNum, message.contentURB );
 	} else {
 		if ( logger->isDebugEnabled() )
 			logger->debug(QString("Message is not complete! Correct=%1 Complete=%2").arg(
@@ -167,7 +167,7 @@ struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitMessage( co
 
 	if (logger->isDebugEnabled() )
 		logger->debug(QString("Received message: TAN1=%1 TAN2=%2 TAN3=%3 packetCount=%4 length=%5").arg(
-				QString::number(retValue.senderTAN,16), QString::number(retValue.receiverTAN,16),QString::number(retValue.TAN,16),
+				QString::number(retValue.senderTAN & 0xff,16), QString::number(retValue.receiverTAN & 0xff,16),QString::number(retValue.TAN & 0xff,16),
 				QString::number(retValue.packetNum&0xffffffff,16),  QString::number( contentLength ) ) );
 
 	QByteArray *content = new QByteArray();

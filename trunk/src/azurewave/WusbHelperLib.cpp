@@ -45,13 +45,14 @@ void WusbHelperLib::appendMarker55Header( QByteArray & buffer, uint16_t xferMode
 	buffer.append( (xferMode & 0xff00) >> 8 );	// transfer mode MSB
 	buffer.append( xferMode & 0xff );	// LSB
 }
-void WusbHelperLib::appendPacketCountHeader( QByteArray & buffer ) {
+unsigned int WusbHelperLib::appendPacketIDHeader( QByteArray & buffer ) {
 	// The packet counter should be written with LSB first!
 	unsigned int counter = getIncrementedPacketCounter();
 	buffer.append(  (counter & 0x000000ff) );
 	buffer.append( ((counter & 0x0000ff00) >> 8 ) );
 	buffer.append( ((counter & 0x00ff0000) >> 16 ) );
 	buffer.append( ((counter & 0xff000000) >> 24 ) );
+	return counter;
 }
 void WusbHelperLib::appendPacketLength( QByteArray & buffer, unsigned int lenValue ) {
 	// The length of packet is written with MSB first! (contrary to packet counter)
