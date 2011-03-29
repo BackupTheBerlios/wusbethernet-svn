@@ -39,7 +39,7 @@ LinuxVHCIconnector::LinuxVHCIconnector( QObject* parent )
 	kernelInterfaceUsable = true; // default: everything should be ok
 
 
-	numberOfPorts = 6;	// TODO config!
+	numberOfPorts = LINUX_VHCI_DEFAULT_NUMBER_OF_PORTS;		// TODO config!
 	portStatusList = new PortStatusData_t[numberOfPorts];
 	for ( int i = 0; i < numberOfPorts; i++ ) {
 		portStatusList[i].portOK = false;
@@ -178,18 +178,22 @@ int LinuxVHCIconnector::connectDevice( USBTechDevice * device, int portID ) {
 		QByteArray * deviceDescriptor = new QByteArray(18,'\0');	// device descriptor is always 18 bytes in length
 		createDeviceDescriptorFromDeviceDescription( device, *deviceDescriptor );
 		connRequest.initialDeviceDescriptor = deviceDescriptor;
-		logger->debug(QString("Fake init descriptor: %1").arg( messageToString( *deviceDescriptor, 0 ) ) );
+		if ( logger->isDebugEnabled() )
+			logger->debug(QString("Fake init descriptor: %1").arg( messageToString( *deviceDescriptor, 0 ) ) );
 
-		logger->debug(QString("Enqueueing device connect request on port %1").
+		if ( logger->isInfoEnabled() )
+			logger->info(QString("Enqueueing device connect request on port %1").
 				arg( (portID > 0? QString::number(portID) : "(unspecified)") ) );
 
-		connectionRequestQueueMutex->lock();
 
+		connectionRequestQueueMutex->lock();
 		portStatusList[portID-1].portInUse = true; // mark port as used
 		portStatusList[portID-1].packetCount = 0;
 		deviceConnectionRequestQueue.enqueue( connRequest );
-
 		connectionRequestQueueMutex->unlock();
+
+		// wake up working thread
+		workInProgressCondition->wakeAll();
 	}
 	return portID;
 }
@@ -202,9 +206,12 @@ bool LinuxVHCIconnector::disconnectDevice( int portID ) {
 
 	logger->debug(QString("Enqueing device disconnect request on port %1").
 			arg( QString::number(portID) ) );
+
 	connectionRequestQueueMutex->lock();
 	deviceConnectionRequestQueue.enqueue( connRequest );
 	connectionRequestQueueMutex->unlock();
+	// wake up working thread
+	workInProgressCondition->wakeAll();
 	return true;
 }
 
@@ -297,7 +304,7 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 			if ( urbData->is_in() ) dirStr = "IN";
 			else if ( urbData->is_out() ) dirStr = "OUT";
 			logger->debug(QString("VHCIconn: URB %1 from system (len=%2, actual=%3, "
-					"isoCount=%4, XferMode=%5, Dir=%6, Flags=0x%7 EndPt=%8): %9").arg(
+					"isoCount=%4, XferMode=%5, Dir=%6, Flags=0x%7 EndPt=%8 Interval=%9): %10").arg(
 							QString::number( portStatusList[portID-1].packetCount ),
 							QString::number( urbData->get_buffer_length() ),
 							QString::number( urbData->get_buffer_actual() ),
@@ -306,6 +313,7 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 							dirStr,
 							QString::number( urbData->get_flags(), 16),
 							QString::number( urbData->get_endpoint_number() ),
+							QString::number( urbData->get_interval() )).arg(
 							messageToString( buffer, buffer.length() ) ) );
 		}
 	} else {
@@ -335,7 +343,7 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 			else if ( urbData->is_out() ) dirStr = "OUT";
 
 			logger->debug(QString("XX VHCIconn: URB %1 from system (len=%2, actual=%3, "
-					"isoCount=%4, XferMode=%5, Dir=%6, Flags=0x%7, EndPt=%8): %9").arg(
+					"isoCount=%4, XferMode=%5, Dir=%6, Flags=0x%7, EndPt=%8, interval=%9, endPtAddr=0x%10): %11").arg(
 							QString::number( portStatusList[portID-1].packetCount ),
 							QString::number( urbData->get_buffer_length() ),
 							QString::number( urbData->get_buffer_actual() ),
@@ -344,8 +352,10 @@ void LinuxVHCIconnector::createURBfromInternalStruct( usb::urb * urbData, QByteA
 							dirStr,
 							QString::number( urbData->get_flags(), 16),
 							QString::number( urbData->get_endpoint_number() ),
-							messageToString( urbData->get_buffer(),
-									(urbData->get_buffer_length()> 8? 10 : 8) )) );
+							QString::number( urbData->get_interval() )).arg(
+									QString::number( urbData->get_endpoint_address(),16),
+									messageToString( urbData->get_buffer(),
+											(urbData->get_buffer_length()> 8? 10 : 8) ) ) );
 		}
 	}
 		/*
@@ -364,7 +374,7 @@ void LinuxVHCIconnector::giveBackAnswerURB( void * refData, bool isOK, QByteArra
 	if ( !refURB ) return;
 
 	struct DeviceURBreplyData replyData;
-	replyData.isOK = isOK;
+	replyData.status = ( isOK ? DEVICE_ANSWER_OK : DEVICE_ANSWER_ERROR );
 	replyData.refURB = refURB;
 	replyData.dataURB = urbData;
 
@@ -392,8 +402,11 @@ bool LinuxVHCIconnector::processOutstandingConnectionRequests() {
 	if ( connRequest.operationFlag == 2 ) {
 		// disconnect operation
 		if ( connRequest.port <= 0 ) return false;
-//		if ( portStatusList[connRequest.port -1].lastURBhandle )
-//			hcd->cancel_process_urb_work( portStatusList[connRequest.port -1].lastURBhandle );
+		if ( portStatusList[connRequest.port -1].lastURBhandle ) {
+			printf("call cancel_process_urb_work\n");
+			hcd->cancel_process_urb_work( portStatusList[connRequest.port -1].lastURBhandle );
+		}
+		printf("call port_disconnect\n");
 		hcd->port_disconnect( connRequest.port );
 		portStatusList[connRequest.port -1].portInUse = false;
 		portStatusList[connRequest.port -1].lastURBhandle = 0L;
@@ -447,7 +460,7 @@ bool LinuxVHCIconnector::processOutstandingURBReplys() {
 			portStatusList[portID-1].lastURBhandle = 0;
 		try {
 			usb::urb * urbOrig = replyData.refURB->get_urb();
-			if ( replyData.isOK ) {
+			if ( replyData.status == DEVICE_ANSWER_OK ) {
 				int lenMax = urbOrig->get_buffer_length();
 				if ( replyData.dataURB && replyData.dataURB->length() > 0 ) {
 					uint8_t* buffer( urbOrig->get_buffer() );	// get buffer from URB struct
@@ -466,8 +479,8 @@ bool LinuxVHCIconnector::processOutstandingURBReplys() {
 						QString::number(lenMax) ) );
 				urbOrig->ack();
 			} else {
-				logger->debug(QString("URB reply: Sending STALL"));
-				urbOrig->stall();
+				logger->debug(QString("URB reply: Sending Error"));
+				urbOrig->set_status( USB_VHCI_STATUS_ERROR );
 			}
 			hcd->finish_work( replyData.refURB );
 		} catch ( std::exception &ex ) {
@@ -515,26 +528,15 @@ void LinuxVHCIconnector::run() {
 			if ( usb::vhci::port_stat_work* psw = dynamic_cast<usb::vhci::port_stat_work*>(work) ) {
 				// Host changes status of port
 				uint8_t portID = psw->get_port();
-				if( psw->triggers_power_off() || psw->triggers_disable() || psw->triggers_suspend() ) {
+				if( psw->triggers_power_off() ) {
 					logger->info(QString("USB Port #%1 powered off").
 							arg(QString::number(portID)));
-
 					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_DISABLED;
 					if ( portStatusList[ portID -1 ].portInUse ) {
 						// port is in use by us!
 						// TODO send signal and disconnect all devices
 						//						logger->info(QString("port #%1 not in use?").arg( QString::number(portID) ) );
 						portStatusList[portID-1].deviceInInitPhase = true;
-					}
-				}
-				if ( psw->triggers_power_on() ) {
-					logger->info(QString("USB Port #%1 powered on").
-							arg(QString::number(portID)));
-					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_POWERON;
-					portStatusList[ portID -1 ].portOK = true;
-					if ( portStatusList[psw->get_port()-1].portInUse ) {
-						// port is in use by us!
-						emit portStatusChanged( portID, PORTSTATE_POWERON );
 					}
 				}
 				if ( psw->triggers_reset() ) {
@@ -547,7 +549,25 @@ void LinuxVHCIconnector::run() {
 					}
 					emit portStatusChanged( portID, PORTSTATE_RESET );
 				}
+				if ( psw->triggers_suspend() ) {
+					logger->info(QString("USB Port #%1 suspend").
+							arg(QString::number(portID)));
+					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_SUSPENDED;
+					if ( portStatusList[psw->get_port()-1].portInUse ) {
 
+						// port is in use by us!urbOrig->get_buffer()
+						// TODO send signal and disconnect all devices
+					}
+				}
+				if ( psw->triggers_disable() ) {
+					logger->info(QString("USB Port #%1 disabled").
+							arg(QString::number(portID)));
+					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_DISABLED;
+					if ( portStatusList[psw->get_port()-1].portInUse ) {
+						// port is in use by us!urbOrig->get_buffer()
+						// TODO send signal and disconnect all devices
+					}
+				}
 				if ( psw->triggers_resuming() ) {
 					logger->info(QString("USB Port #%1 resuming").
 							arg(QString::number(portID)));
@@ -557,14 +577,14 @@ void LinuxVHCIconnector::run() {
 					}
 					emit portStatusChanged( portID, PORTSTATE_RESUME );
 				}
-
-				if ( psw->triggers_suspend() || psw->triggers_disable() ) {
-					logger->info(QString("USB Port #%1 disabled / suspend").
+				if ( psw->triggers_power_on() ) {
+					logger->info(QString("USB Port #%1 powered on").
 							arg(QString::number(portID)));
-					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_SUSPENDED;
+					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_POWERON;
+					portStatusList[ portID -1 ].portOK = true;
 					if ( portStatusList[psw->get_port()-1].portInUse ) {
-						// port is in use by us!urbOrig->get_buffer()
-						// TODO send signal and disconnect all devices
+						// port is in use by us!
+						emit portStatusChanged( portID, PORTSTATE_POWERON );
 					}
 				}
 				hcd->finish_work(work);
@@ -580,13 +600,6 @@ void LinuxVHCIconnector::run() {
 						portStatusList[portID -1].lastURBhandle = urbData->get_handle();
 						portStatusList[portID-1].packetCount++;
 
-/*						// workaround for reinit of port
-						if ( urbData->is_control() &&
-								urbData->get_bmRequestType() == 0x00 &&
-								urbData->get_bRequest() == 0x05 ) {
-							portStatusList[portID-1].deviceInInitPhase = true;
-						}
-*/
 						if ( portStatusList[portID-1].deviceInInitPhase ) {
 							// if we are still in init phase all communication is performed here!
 							if ( urbData->is_control() ) {
@@ -647,48 +660,50 @@ void LinuxVHCIconnector::run() {
 						else if ( urbData->is_isochronous() )
 							xferType = TI_WusbStack::ISOCHRONOUS_TRANSFER;
 
+						uint32_t xferInterval = urbData->get_interval();
+
 						QByteArray * urbRawData = new QByteArray;
 						createURBfromInternalStruct( urbData, *urbRawData, portID );
 						switch ( portID ) {
 						case 1:
 							emit urbDataSend1( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 2:
 							emit urbDataSend2( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 3:
 							emit urbDataSend3( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 4:
 							emit urbDataSend4( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 5:
 							emit urbDataSend5( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 6:
 							emit urbDataSend6( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 7:
 							emit urbDataSend7( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						case 8:
 							emit urbDataSend8( puw, xferFlags, endPtNo,
 									xferType, dirType,
-									urbRawData, urbData->get_buffer_length() );
+									urbRawData, (uint8_t) xferInterval, urbData->get_buffer_length() );
 							break;
 						}
 					} else

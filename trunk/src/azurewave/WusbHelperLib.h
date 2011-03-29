@@ -23,7 +23,7 @@ public:
 	static unsigned int getIncrementedPacketCounter();
 
 	static void appendTransactionHeader( QByteArray & buffer, int sendTAN, int recTAN, int tanCount );
-	static void appendMarker55Header( QByteArray & buffer, uint16_t xferMode = 0 );
+	static void appendMarker55Header( QByteArray & buffer, uint8_t param1 = 0, uint8_t intervalVal = 0 );
 	static unsigned int appendPacketIDHeader( QByteArray & buffer );
 	static void appendPacketLength( QByteArray & buffer, unsigned int lenValue );
 

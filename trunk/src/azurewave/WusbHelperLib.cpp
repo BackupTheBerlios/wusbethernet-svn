@@ -39,11 +39,11 @@ void WusbHelperLib::appendTransactionHeader( QByteArray & buffer, int sendTAN, i
 	buffer.append( 0x10 );
 	buffer.append( (uint8_t) tanCount );
 }
-void WusbHelperLib::appendMarker55Header( QByteArray & buffer, uint16_t xferMode ) {
+void WusbHelperLib::appendMarker55Header( QByteArray & buffer, uint8_t param1, uint8_t intervalVal ) {
 	buffer.append( 0x55 );
 	buffer.append( 0x55 );
-	buffer.append( (xferMode & 0xff00) >> 8 );	// transfer mode MSB
-	buffer.append( xferMode & 0xff );	// LSB
+	buffer.append( param1 );	// parameter 1 (error count ?)
+	buffer.append( intervalVal );	// interval value
 }
 unsigned int WusbHelperLib::appendPacketIDHeader( QByteArray & buffer ) {
 	// The packet counter should be written with LSB first!

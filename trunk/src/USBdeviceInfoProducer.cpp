@@ -412,20 +412,20 @@ QString USBdeviceInfoProducer::getHTMLReport() {
 			for ( int idxEpt = 0; idxEpt < configDescriptor.listInterface[intIdx]->listEndpoints.size(); idxEpt++ ) {
 				result += QString::fromAscii("<tr><th valign=\"middle\"><i>Endpoint %1</i></th><td colspan=\"3\"><table border=\"1\" width=\"100%\">\n").arg(
 						QString::number( idxEpt ) );
-				result += QString::fromAscii("<tr><th>Address<br>(<tt>bEndpointAddress</tt>)</th><td>%1</td></tr>").arg(
-						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bEndpointAddress ) );
-				result += QString::fromAscii("<tr><th>Max. packetsize<br>(<tt>wMaxPacketSize</tt>)</th><td>%1</td></tr>").arg(
-						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->wMaxPacketSize ) );
+				result += QString::fromAscii("<tr><th>Address<br>(<tt>bEndpointAddress</tt>)</th><td>0x%1</td></tr>").arg(
+						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bEndpointAddress, 16 ) );
+				result += QString::fromAscii("<tr><th>Max. packetsize<br>(<tt>wMaxPacketSize</tt>)</th><td>0x%1</td></tr>").arg(
+						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->wMaxPacketSize, 16 ) );
 				result += QString::fromAscii("<tr><th>Attributes<br>(<tt>bmAttributes</tt>)</th><td>%1</td><td>%2</td></tr>").arg(
 						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bmAttributes ),
 						endpointAttributesToString(configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bmAttributes) );
-				result += QString::fromAscii("<tr><th>Interval<br>(<tt>bInterval</tt>)</th><td>%1</td></tr>").arg(
-						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bInterval ) );
+				result += QString::fromAscii("<tr><th>Interval<br>(<tt>bInterval</tt>)</th><td>0x%1</td></tr>").arg(
+						QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bInterval, 16 ) );
 				if ( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bLength > 7 ) {
-					result += QString::fromAscii("<tr><th>Refresh<br>(<tt>bRefresh</tt>)</th><td>%1</td></tr>").arg(
-							QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bRefresh ) );
-					result += QString::fromAscii("<tr><th>SynchAddress<br>(<tt>bSynchAddress</tt>)</th><td>%1</td></tr>\n").arg(
-							QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bSynchAddress ) );
+					result += QString::fromAscii("<tr><th>Refresh<br>(<tt>bRefresh</tt>)</th><td>0x%1</td></tr>").arg(
+							QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bRefresh, 16 ) );
+					result += QString::fromAscii("<tr><th>SynchAddress<br>(<tt>bSynchAddress</tt>)</th><td>0x%1</td></tr>\n").arg(
+							QString::number( configDescriptor.listInterface[intIdx]->listEndpoints[idxEpt]->bSynchAddress,16 ) );
 				}
 				result += "</table></td></tr>\n";
 			}

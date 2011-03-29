@@ -6,6 +6,7 @@ QT += core \
     network \
     xml \
     gui
+    
 HEADERS += src/TI_USB_VHCI.h \
     src/test/VirtualUSBdevice.h \
     src/vhci/LinuxVHCIconnector.h \

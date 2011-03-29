@@ -269,11 +269,12 @@ bool WusbStack::sendURB (
 		eDataDirectionType directionType,
 		uint8_t endpoint,
 		uint16_t transferFlags,
+		uint8_t intervalVal,
 		int receiveLength ) {
 
 	// just delegate this to methode below...
 	QByteArray * urbBytes = new QByteArray( urbData, urbDataLen );
-	return sendURB( refData, urbBytes, dataTransferType, directionType, endpoint, transferFlags, receiveLength );
+	return sendURB( refData, urbBytes, dataTransferType, directionType, endpoint, transferFlags, intervalVal, receiveLength );
 }
 
 bool WusbStack::sendURB (
@@ -283,6 +284,7 @@ bool WusbStack::sendURB (
 		eDataDirectionType directionType,
 		uint8_t endpoint,
 		uint16_t transferFlags,
+		uint8_t intervalVal,
 		int receiveLength ) {
 
 	int packetLen =	urbData->length() + WUSB_AZUREWAVE_SEND_HEADER_LEN;	// +28 bytes header
@@ -319,6 +321,8 @@ bool WusbStack::sendURB (
 		currentTransactionNum = 0xff;
 	else
 		currentTransactionNum = qMax(currentSendTransactionNum, currentReceiveTransactionNum);
+
+/*
 	uint16_t xferMode = 0;
 	switch( dataTransferType ) {
 	case CONTROL_TRANSFER:
@@ -335,17 +339,49 @@ bool WusbStack::sendURB (
 		xferMode = 0;
 		break;
 	}
+*/
+//	if ( dataTransferType == INTERRUPT_TRANSFER )
+//		intervalVal = 0x0a;
 	WusbHelperLib::appendTransactionHeader( buffer, currentSendTransactionNum, currentReceiveTransactionNum, currentTransactionNum );
-	WusbHelperLib::appendMarker55Header( buffer, xferMode );
+	WusbHelperLib::appendMarker55Header( buffer, 0, intervalVal );	// XXX parameter1 unknown
 	unsigned int packetID = WusbHelperLib::appendPacketIDHeader( buffer );
 
 	// storing the packetID of prepared (and hopefully sent) packet
 	if ( refData && dataTransferType != ISOCHRONOUS_TRANSFER )
 		packetRefDataByPacketID[packetID] = refData;
 
+	uint8_t xferDirectionValue = 0;
+	switch( dataTransferType ) {
+		case CONTROL_TRANSFER:
+			xferDirectionValue = 0x80;
+			break;
+		case BULK_TRANSFER:
+			xferDirectionValue = 0xc0;	// XXX
+			break;
+		case INTERRUPT_TRANSFER:
+			xferDirectionValue = 0x40;
+			break;
+		case ISOCHRONOUS_TRANSFER:
+			// isochronous transfer is enabled by transfer flag (?)
+			xferDirectionValue = 0;
+			break;
+	}
 	// TODO data direction, endpoint and special treatment of some transfer types
-	buffer.append( 0x80 >> endpoint );
-	buffer.append( '\0' );
+//	if ( directionType == TI_WusbStack::DATADIRECTION_OUT || dataTransferType == CONTROL_TRANSFER )
+//		buffer.append( 0x80 >> endpoint );
+
+	buffer.append( xferDirectionValue );
+
+	// Endpoint address
+	uint16_t endptShrt = (endpoint << 7);
+	buffer.append( (endptShrt & 0xff00) >> 8 );
+	buffer.append( endptShrt & 0xff );
+
+	if ( directionType == TI_WusbStack::DATADIRECTION_IN )
+		buffer.append( 0x80 );
+	else
+		buffer.append('\0' );
+	/*
 	// XXX WTF?
 	if ( directionType == TI_WusbStack::DATADIRECTION_IN && dataTransferType != CONTROL_TRANSFER )
 		buffer.append( 0x80 );
@@ -355,6 +391,8 @@ bool WusbStack::sendURB (
 		buffer.append( 0x80 );
 	else
 		buffer.append('\0' );
+	*/
+
 	buffer.append( '\0' );
 	buffer.append( '\0' );
 	buffer.append( (transferFlags & 0xff00) >> 8 );
@@ -404,11 +442,11 @@ bool WusbStack::sendURB (
 void WusbStack::processURB(
 		void * refData, uint16_t transferFlags, uint8_t endPointNo,
 		TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-		QByteArray * urbData, int expectedReceiveLength ) {
+		QByteArray * urbData, uint8_t intervalVal, int expectedReceiveLength ) {
 
 	// the last packet
 	packetRefData = refData;
-	sendURB( refData, urbData, transferType, dDirection, endPointNo, transferFlags, expectedReceiveLength );
+	sendURB( refData, urbData, transferType, dDirection, endPointNo, transferFlags, intervalVal, expectedReceiveLength );
 }
 
 void WusbStack::registerURBreceiver( TI_USB_VHCI * urbSink ) {

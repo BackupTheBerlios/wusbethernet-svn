@@ -26,6 +26,13 @@ public:
 		PORTSTATE_RESET,
 		PORTSTATE_RESUME
 	};
+	/** Status of received URB from hub */
+	enum eDeviceURBAnswerType {
+		DEVICE_ANSWER_OK,
+		DEVICE_ANSWER_ERROR,
+		DEVICE_ANSWER_STALL,
+		DEVICE_ANSWER_NOT_RESPONDING,
+	};
 
 	TI_USB_VHCI( QObject * parent = 0 ) : QThread( parent ) {};
 	virtual ~TI_USB_VHCI() {};

@@ -9,7 +9,7 @@
 #ifndef LINUXVHCICONNECTOR_H_
 #define LINUXVHCICONNECTOR_H_
 
-#include "../../usb-vhci/libusb_vhci.h"
+#include <libusb_vhci.h>
 #include "../TI_WusbStack.h"
 #include "../TI_USB_VHCI.h"
 #include <QThread>
@@ -22,6 +22,7 @@ class QMutex;
 class QWaitCondition;
 class USBTechDevice;
 
+#define LINUX_VHCI_DEFAULT_NUMBER_OF_PORTS		6
 
 class LinuxVHCIconnector : public TI_USB_VHCI {
 	Q_OBJECT
@@ -84,7 +85,7 @@ public:
 
 
 	/**
-	 * Passes back an answer to host for last request.
+	 * Passes back an answer (URB) to host for request specified by <tt>refData</tt>.
 	 * @see TI_USB_VHCI
 	 */
 	virtual void giveBackAnswerURB( void * refData, bool isOK, QByteArray * urbData );
@@ -106,7 +107,7 @@ private:
 		QByteArray * initialDeviceDescriptor;
 	};
 	struct DeviceURBreplyData {
-		bool isOK;
+		eDeviceURBAnswerType status;
 		usb::vhci::process_urb_work * refURB;
 		QByteArray * dataURB;
 	};
@@ -171,7 +172,7 @@ private:
 
 	/** A queue for "device connect" requests */
 	QQueue< struct DeviceConnectionData_t > deviceConnectionRequestQueue;
-	/** Mutex to gard device connect operation queue */
+	/** Mutex to protect device connect operation queue */
 	QMutex * connectionRequestQueueMutex;
 	/** A queue for "URB reply from device" data */
 	QQueue< struct DeviceURBreplyData >   deviceReplyDataQueue;
@@ -210,28 +211,28 @@ signals:
 	void portStatusChanged( uint8_t portID, ePortStatus portState );
 	void urbDataSend1( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend2( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend3( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend4( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend5( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend6( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend7( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 	void urbDataSend8( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReturnLength );
+			QByteArray * urbData, uint8_t intervalVal, int expectedReturnLength );
 };
 
 #endif /* LINUXVHCICONNECTOR_H_ */

@@ -70,6 +70,7 @@ public:
 	virtual bool sendURB( void * refData, const char * urbData, int urbDataLen,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
+			uint8_t intervalVal,
 			int receiveLength ) = 0;
 	/**
 	 * Send USB request block (<em>URB</em>) to device. The URB is wrapped with
@@ -86,6 +87,7 @@ public:
 	virtual bool sendURB( void * refData, QByteArray * urbData,
 			eDataTransferType dataTransferType, eDataDirectionType directionType,
 			uint8_t endpoint, uint16_t transferFlags,
+			uint8_t intervalVal,
 			int receiveLength ) = 0;
 
 	/**
@@ -122,7 +124,7 @@ public:
 public slots:
 	virtual void processURB( void * refData, uint16_t transferFlags, uint8_t endPointNo,
 			TI_WusbStack::eDataTransferType transferType, TI_WusbStack::eDataDirectionType dDirection,
-			QByteArray * urbData, int expectedReceiveLength ) = 0;
+			QByteArray * urbData, uint8_t intervalVal, int expectedReceiveLength ) = 0;
 
 signals:
 	/**

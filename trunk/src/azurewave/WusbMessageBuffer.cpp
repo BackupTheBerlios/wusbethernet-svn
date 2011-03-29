@@ -64,7 +64,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 				return;
 				break;
 			case 0x10:
-				// alive message with transaction counter == 0 (?) -> almost impossible...
+				// alive message with transaction counter == 0 (?) -> almost impossible... - except device STALL(?)
 				emit statusMessage( DEVICE_ALIVE );
 				return;
 				break;
@@ -77,7 +77,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 			}
 		}
 		if ( bytes[2] == 0x10 ) {
-
+			// TODO error handling!
 			emit statusMessage( DEVICE_ALIVE );
 		}
 		return;
