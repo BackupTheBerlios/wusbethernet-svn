@@ -511,7 +511,7 @@ void WusbStack::processURBmessage( unsigned int packetID, QByteArray * urbBytes 
 			packetRefDataByPacketID.remove( packetID );
 		} else {
 			logger->warn(QString("Fallback of packet ref data (ID = 0x%1)").arg( QString::number( packetID, 16) ) );
-			urbReceiver->giveBackAnswerURB( packetRefData, true, urbBytes );
+//			urbReceiver->giveBackAnswerURB( packetRefData, true, urbBytes );
 			packetRefData = NULL;	// XXX this may be not true for isochronous transfer!
 		}
 	} else {
