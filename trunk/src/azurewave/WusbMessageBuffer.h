@@ -12,6 +12,7 @@
 #include <QThread>
 #include <QString>
 #include <QByteArray>
+#include <stdint.h>
 
 class WusbStack;
 class Logger;
@@ -24,7 +25,8 @@ public:
     	DEVICE_OPEN_SUCCESS,
     	DEVICE_CLOSE_SUCCESS,
     	DEVICE_ALIVE,
-    	DEVICE_STALL
+    	DEVICE_STALL,
+    	DEVICE_RECEIVED_DUP
     };
 
 
@@ -70,7 +72,7 @@ public slots:
 	void receive( const QByteArray & bytes );
 signals:
 	/** Status changed (or an event occured) on/in connection */
-	void statusMessage( WusbMessageBuffer::eTypeOfMessage );
+	void statusMessage( WusbMessageBuffer::eTypeOfMessage, uint8_t, uint8_t, uint8_t );
 	/** An URB was completely received and can be processed */
 	void urbMessage( unsigned int packetID, QByteArray * urbData );
 	void informPacketMeta( int newReceiverTAN, int lastSessionTAN, unsigned int packetCounter );

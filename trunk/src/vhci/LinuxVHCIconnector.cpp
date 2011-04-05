@@ -403,10 +403,8 @@ bool LinuxVHCIconnector::processOutstandingConnectionRequests() {
 		// disconnect operation
 		if ( connRequest.port <= 0 ) return false;
 		if ( portStatusList[connRequest.port -1].lastURBhandle ) {
-			printf("call cancel_process_urb_work\n");
 			hcd->cancel_process_urb_work( portStatusList[connRequest.port -1].lastURBhandle );
 		}
-		printf("call port_disconnect\n");
 		hcd->port_disconnect( connRequest.port );
 		portStatusList[connRequest.port -1].portInUse = false;
 		portStatusList[connRequest.port -1].lastURBhandle = 0L;
@@ -707,9 +705,10 @@ void LinuxVHCIconnector::run() {
 							break;
 						}
 					} else
-						printf("no URB data???\n");
+						logger->warn("URB work - but no URB data???");
 				} else {
-					logger->debug(QString("Got canceled URB for port %1").arg( QString::number(portID) ) );
+					if ( logger->isDebugEnabled() )
+						logger->debug(QString("Got canceled URB for port %1").arg( QString::number(portID) ) );
 				}
 			}
 

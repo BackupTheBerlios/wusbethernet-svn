@@ -794,8 +794,6 @@ void HubDevice::disconnectDevice( USBTechDevice * deviceRef ) {
 		return;
 	}
 	if ( deviceRef->status == USBTechDevice::PS_Claimed && deviceRef->owned ) {
-		// TODO Device is claimed by us -> need to implement disconnect procedure!
-		//logger->warn( QString("Sorry: Device disconnect not implemented yet...") );
 		if ( !deviceRef->connWorker ) {
 			// Problem: device is claimed/owned by us but no connection worker available???
 			logger->warn( QString("Device disconnect operation on owned device but no connection worker registered!?") );
@@ -832,6 +830,7 @@ void HubDevice::connectionWorkerJobDone( USBconnectionWorker::eWorkDoneExitCode 
 	} else if ( exitCode == USBconnectionWorker::WORK_DONE_FAILED ) {
 		logger->warn( QString("No result/failed from USB device operation (no info)") );
 	}
+
 /*	disconnect( deviceRef.connWorker, SIGNAL(workIsDone(USBconnectionWorker::WorkDoneExitCode)),
 			this, SLOT(connectionWorkerJobDone(USBconnectionWorker::WorkDoneExitCode)) );
 	delete deviceRef.connWorker;

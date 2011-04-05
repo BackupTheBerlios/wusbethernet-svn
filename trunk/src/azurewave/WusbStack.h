@@ -35,7 +35,7 @@ class TI_USB_VHCI;
 /** Header length of a received packet (answer packet from hub) */
 #define WUSB_AZUREWAVE_RECEIVE_HEADER_LEN		24
 /** Basic timer interval to check for retransmit or to send ack/idle/keep alive messages */
-#define WUSB_AZUREWAVE_TIMER_INTERVAL			75L
+#define WUSB_AZUREWAVE_TIMER_INTERVAL			50L
 /** maximum size of one network packet (protocol/device does not support bigger packets or fragments!) */
 #define WUSB_AZUREWAVE_NETWORK_DEFAULT_MTU		1472
 /** after this time a ACK is send to hub when no further packets (URB) are ready to send  */
@@ -153,15 +153,16 @@ private:
 	void stopTimer();
 
 	/** Send idle / keepalive message to device  */
-	bool sendIdleMessage();
-
+	bool sendIdleMessage( uint8_t sendTAN = 0, uint8_t recTAN = 0, uint8_t tan = 0 );
+	/** Send receive acknowledge message */
+	void sendAcknowledgeReplyMessage();
 private slots:
 	/** Receive routine to read data on UDP socket. Will be called upon signal from QT socket stack. */
 	void processPendingData();
 	/** Signal from socket that an uncorrectable (on socket layer) error occured */
 	void socketError(QAbstractSocket::SocketError socketError);
 	/** Status of connection changed or some special packet received */
-	void processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg );
+	void processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg, uint8_t, uint8_t, uint8_t );
 	/** Receive of a URB pacekt from network */
 	void processURBmessage( unsigned int packetID, QByteArray * urbBytes );
 	void informReceivedPacket( int newReceiverTAN, int lastSessionTAN, unsigned int packetCounter );

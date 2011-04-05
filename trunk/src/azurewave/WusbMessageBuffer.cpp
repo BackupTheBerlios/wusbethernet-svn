@@ -54,18 +54,18 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 			case 0x04:
 				// close device
 				logger->info("Received 'device closed' confirm message");
-				emit statusMessage( DEVICE_CLOSE_SUCCESS );
+				emit statusMessage( DEVICE_CLOSE_SUCCESS, 0,0,0 );
 				return;
 				break;
 			case 0x12:
 				// open device
 				logger->info("Received 'device opened' confirm message");
-				emit statusMessage( DEVICE_OPEN_SUCCESS );
+				emit statusMessage( DEVICE_OPEN_SUCCESS, 0,0,0 );
 				return;
 				break;
 			case 0x10:
 				// alive message with transaction counter == 0 (?) -> almost impossible... - except device STALL(?)
-				emit statusMessage( DEVICE_ALIVE );
+				emit statusMessage( DEVICE_ALIVE, 0,0,0 );
 				return;
 				break;
 			default:
@@ -78,7 +78,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 		}
 		if ( bytes[2] == 0x10 ) {
 			// TODO error handling!
-			emit statusMessage( DEVICE_ALIVE );
+			emit statusMessage( DEVICE_ALIVE, bytes[0], bytes[1], bytes[3] );
 		}
 		return;
 	} // 4 bytes messages
@@ -87,6 +87,7 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 		// Duplicate packet received!
 		if ( logger->isDebugEnabled() )
 			logger->debug(QString("Duplicate packet received with length %1").arg( QString::number(bytes.length() ) ) );
+		emit statusMessage( DEVICE_RECEIVED_DUP, bytes[0], bytes[1], bytes[3] );
 		return;
 	}
 	lastReceivedPacket->clear();

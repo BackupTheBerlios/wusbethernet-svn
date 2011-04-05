@@ -57,8 +57,9 @@ WusbStack::WusbStack( Logger *parentLogger, const QHostAddress & destinationAddr
 	// init receive message buffer
 	messageBuffer = new WusbMessageBuffer( this, maxMTU );
 
-	connect( messageBuffer, SIGNAL(statusMessage(WusbMessageBuffer::eTypeOfMessage)),
-			this, SLOT(processStatusMessage(WusbMessageBuffer::eTypeOfMessage)), Qt::QueuedConnection );
+	connect( messageBuffer, SIGNAL(statusMessage(WusbMessageBuffer::eTypeOfMessage,uint8_t,uint8_t,uint8_t )),
+			this, SLOT(processStatusMessage(WusbMessageBuffer::eTypeOfMessage,uint8_t,uint8_t,uint8_t)),
+			Qt::QueuedConnection );
 	connect( messageBuffer, SIGNAL(urbMessage( unsigned int, QByteArray* )),
 			this, SLOT(processURBmessage( unsigned int, QByteArray* )), Qt::QueuedConnection );
 	connect( messageBuffer, SIGNAL(informPacketMeta( int, int, unsigned int )),
@@ -247,16 +248,21 @@ void WusbStack::socketError(QAbstractSocket::SocketError socketError) {
 void WusbStack::timerInterrupt() {
 	// This is called every 100ms to check if idle/keep-alive messages are neccessary to send
 	long long now = currentTimeMillis();
+	long long lastPacketTime = qMax( lastPacketSendTimeMillis, lastPacketReceiveTimeMillis );
+
 	// sanity check
 	if ( !udpSocket || state != STATE_OPENED || lastPacketSendTimeMillis == 0L ) return;
+
+//	if ( lastPacketReceiveTimeMillis > now || now - lastPacketReceiveTimeMillis > )
 
 	// Since more than 100ms nothing sent? (and workaround for clock warping...)
 	// We need to send idle (or receive OK) messages:
 	// - when no real communcation is needed (a.k.a. keep alive)  (2 secs)
 	// - when we received a message from hub but have no new message to send (receive ack) (>100ms)
-	if ( lastPacketSendTimeMillis > now || now - lastPacketSendTimeMillis > WUSB_AZUREWAVE_TIMER_SEND_ACK ) {
-		if ( now - lastSendAlivePacket >= WUSB_AZUREWAVE_TIMER_SEND_KEEP_ALIVE ||
-				lastSendAlivePacket < lastPacketSendTimeMillis )
+	if ( lastPacketTime > now || now - lastPacketTime > WUSB_AZUREWAVE_TIMER_SEND_ACK ) {
+		if ( lastSendAlivePacket < lastPacketTime )
+			sendAcknowledgeReplyMessage();
+		else if ( now - lastSendAlivePacket >= WUSB_AZUREWAVE_TIMER_SEND_KEEP_ALIVE )
 			sendIdleMessage();
 	}
 }
@@ -320,28 +326,8 @@ bool WusbStack::sendURB (
 	if ( sendPacketCounter == 0 )
 		currentTransactionNum = 0xff;
 	else
-		currentTransactionNum = qMax(currentSendTransactionNum, currentReceiveTransactionNum);
+		currentTransactionNum = qMin(currentSendTransactionNum, currentReceiveTransactionNum);
 
-/*
-	uint16_t xferMode = 0;
-	switch( dataTransferType ) {
-	case CONTROL_TRANSFER:
-		xferMode = 0;
-		break;
-	case BULK_TRANSFER:
-		xferMode = 0;	// XXX
-		break;
-	case INTERRUPT_TRANSFER:
-		xferMode = 0x0a;
-		break;
-	case ISOCHRONOUS_TRANSFER:
-		// isochronous transfer is enabled by transfer flag (?)
-		xferMode = 0;
-		break;
-	}
-*/
-//	if ( dataTransferType == INTERRUPT_TRANSFER )
-//		intervalVal = 0x0a;
 	WusbHelperLib::appendTransactionHeader( buffer, currentSendTransactionNum, currentReceiveTransactionNum, currentTransactionNum );
 	WusbHelperLib::appendMarker55Header( buffer, 0, intervalVal );	// XXX parameter1 unknown
 	unsigned int packetID = WusbHelperLib::appendPacketIDHeader( buffer );
@@ -413,9 +399,9 @@ bool WusbStack::sendURB (
 	if ( sendPacketCounter == 0 )
 		currentTransactionNum = 0;
 	sendPacketCounter++;
-	lastPacketSendTimeMillis = currentTimeMillis();
 	if ( messageSplit.isEmpty() ) {
 		delete urbData;
+		lastPacketSendTimeMillis = currentTimeMillis();
 		return writeToSocket( buffer );
 	} else {
 		QLinkedListIterator<QByteArray> it( messageSplit );
@@ -453,32 +439,55 @@ void WusbStack::registerURBreceiver( TI_USB_VHCI * urbSink ) {
 	urbReceiver = urbSink;
 }
 
-bool WusbStack::sendIdleMessage() {
+void WusbStack::sendAcknowledgeReplyMessage() {
+	int tempSendTransactionNum = (currentSendTransactionNum +1 ) % 256;
+	int tempTransactionNum = 0;
+	if ( sendPacketCounter == 0 )
+		tempTransactionNum = 0xff;
+	else
+		tempTransactionNum = qMin(currentSendTransactionNum, currentReceiveTransactionNum);
+
+	lastPacketSendTimeMillis = currentTimeMillis();
+	sendIdleMessage( tempSendTransactionNum, currentReceiveTransactionNum, tempTransactionNum );
+}
+
+bool WusbStack::sendIdleMessage( uint8_t sendTAN, uint8_t recTAN, uint8_t tan ) {
 	if ( state != WusbStack::STATE_OPENED ) return false;
 
 	QByteArray buffer = QByteArray( 4, 0x10 );
-	buffer[0] = currentSendTransactionNum;
-	buffer[1] = currentReceiveTransactionNum;
-	buffer[3] = currentTransactionNum;
+	if ( sendTAN > 0 ) {
+		buffer[0] = sendTAN;
+		buffer[1] = recTAN;
+		buffer[3] = tan;
+	} else {
+		buffer[0] = currentSendTransactionNum;
+		buffer[1] = currentReceiveTransactionNum;
+		buffer[3] = currentTransactionNum;
+	}
 
 	lastSendAlivePacket = currentTimeMillis();
 	return writeToSocket( buffer );
 }
 
-void WusbStack::processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg ) {
+void WusbStack::processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg, uint8_t tan1, uint8_t tan2, uint8_t tan3 ) {
 	switch( typeMsg ) {
 	case WusbMessageBuffer::DEVICE_OPEN_SUCCESS:
+		lastPacketReceiveTimeMillis = currentTimeMillis();
 		logger->info(QString("Status message: OPEN_SUCCESS") );
 		state = STATE_OPENED;
 		break;
 	case WusbMessageBuffer::DEVICE_CLOSE_SUCCESS:
+		lastPacketReceiveTimeMillis = currentTimeMillis();
 		logger->info(QString("Status message: CLOSE_SUCCESS") );
 		state = STATE_CLOSED;
 		break;
 	case WusbMessageBuffer::DEVICE_ALIVE:
-		logger->info(QString("Status message: DEVICE_ALIVE") );
+		lastPacketReceiveTimeMillis = currentTimeMillis();
+		if ( logger->isDebugEnabled() )
+			logger->debug(QString("Status message: DEVICE_ALIVE") );
 		break;
 	case WusbMessageBuffer::DEVICE_STALL:
+		lastPacketReceiveTimeMillis = currentTimeMillis();
 		// an error occured!
 		logger->warn(QString("Status message: DEVICE_STALL") );
 		// -> send error message to message receiver
@@ -488,6 +497,10 @@ void WusbStack::processStatusMessage( WusbMessageBuffer::eTypeOfMessage typeMsg 
 			urbReceiver->giveBackAnswerURB( packetRefData, false, NULL );
 			packetRefData = NULL;	// XXX this may be not true for isochronous transfer!
 		}
+		break;
+	case WusbMessageBuffer::DEVICE_RECEIVED_DUP:
+		lastPacketReceiveTimeMillis = currentTimeMillis();
+		sendIdleMessage( tan2, tan1+1, tan2);
 		break;
 	default:
 		// ???
@@ -502,6 +515,8 @@ void WusbStack::processURBmessage( unsigned int packetID, QByteArray * urbBytes 
 	if ( logger->isTraceEnabled() )
 		logger->trace(QString("Received URB: %1").
 				arg( WusbHelperLib::messageToString( *urbBytes, urbBytes->length() ) ));
+
+	lastPacketReceiveTimeMillis = currentTimeMillis();
 
 	if ( urbReceiver ) {
 		// Procedure for passing URB to OS integration module

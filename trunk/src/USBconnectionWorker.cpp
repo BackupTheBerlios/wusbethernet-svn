@@ -162,7 +162,8 @@ void USBconnectionWorker::connectDeviceInternal() {
 		quit();	// stop thread
 		return;
 	}
-	logger->info(QString("Connected on port %1").arg( QString::number( portID) ));
+	if ( logger->isInfoEnabled() )
+		logger->info(QString("Connected on port %1").arg( QString::number( portID) ));
 	vhciPortID = portID;
 
 	// open network connection
@@ -243,9 +244,65 @@ void USBconnectionWorker::connectDeviceInternal() {
 }
 
 void USBconnectionWorker::disconnectDevice() {
-	// XXX disconnect()
+	if ( stack ) {
+		if ( !stack->closeConnection() ) {
+			logger->warn("Stack connection not active???");
+		}
+	} else
+		return;
 	if ( deviceUSBhostConnector ) {
 		deviceUSBhostConnector->disconnectDevice( vhciPortID );
+	}
+
+	switch ( vhciPortID ) {
+	case 1:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend1(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)) );
+		break;
+	case 2:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend2(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)) );
+		break;
+	case 3:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend3(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)) );
+		break;
+	case 4:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend4(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)) );
+		break;
+	case 5:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend5(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)));
+		break;
+	case 6:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend6(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)));
+		break;
+	case 7:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend7(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)));
+		break;
+	case 8:
+		disconnect( deviceUSBhostConnector, SIGNAL( urbDataSend8(
+				void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,int)),
+				stack,
+				SLOT(processURB(void *,uint16_t,uint8_t,TI_WusbStack::eDataTransferType,TI_WusbStack::eDataDirectionType,QByteArray *,uint8_t,int)));
+		break;
 	}
 	quit();	// exit event looping
 }
@@ -297,7 +354,6 @@ void USBconnectionWorker::run() {
 		break;
 	case JOBTYPE_CONNECT_DEVICE:
 		connectDeviceInternal();
-		printf("starting worker thread\n");
 		exec();
 		lastExitCode = WORK_DONE_SUCCESS;
 		break;
