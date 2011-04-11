@@ -543,7 +543,7 @@ void LinuxVHCIconnector::run() {
 					// portStatusList[ portID -1 ] = PORTSTATE_RESET;
 					if ( hcd->get_port_stat( portID ).get_connection() ) {
 						logger->info(" - Completing reset on port");
-						hcd->port_reset_done( portID );
+						hcd->port_reset_done( portID, true );
 					}
 					emit portStatusChanged( portID, PORTSTATE_RESET );
 				}
@@ -560,7 +560,10 @@ void LinuxVHCIconnector::run() {
 				if ( psw->triggers_disable() ) {
 					logger->info(QString("USB Port #%1 disabled").
 							arg(QString::number(portID)));
-					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_DISABLED;
+					// -> Signal is emitted when a device is disconnected from system
+					//    should be handled equivalent to "power on"!
+					portStatusList[ portID -1 ].portStatus = TI_USB_VHCI::PORTSTATE_POWERON;
+					portStatusList[ portID -1 ].portOK = true;
 					if ( portStatusList[psw->get_port()-1].portInUse ) {
 						// port is in use by us!urbOrig->get_buffer()
 						// TODO send signal and disconnect all devices
