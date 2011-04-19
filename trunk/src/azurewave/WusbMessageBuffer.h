@@ -43,11 +43,12 @@ public:
 private:
 	static bool isFirstInstance;
 
-    struct answerMessageParts {
+    struct sAnswerMessageParts {
+		bool slotInUse;
     	bool isCorrect;
-    	int senderTAN;
-    	int receiverTAN;
-    	int TAN;
+    	uint8_t senderTAN;
+    	uint8_t receiverTAN;
+    	uint8_t TAN;
     	unsigned int packetNum;		// packet counter
     	int contentLength;	// length of contentURB
     	bool isComplete;
@@ -60,11 +61,15 @@ private:
 	QByteArray * internalBuffer;
 	QByteArray * lastReceivedPacket;
 	int bytesLeftInCurrentTask;
-	struct WusbMessageBuffer::answerMessageParts incompleteMessage;
-	bool lastMessageWasIncomplete;
+//	struct WusbMessageBuffer::sAnswerMessageParts incompleteMessage;
+//	bool lastMessageWasIncomplete;
+	bool haveIncompleMessages;
+	struct WusbMessageBuffer::sAnswerMessageParts * incompleteMessages;
 
-	struct WusbMessageBuffer::answerMessageParts splitMessage( const QByteArray & bytes );
-	struct WusbMessageBuffer::answerMessageParts splitContinuedMessage( const QByteArray & bytes );
+
+	struct WusbMessageBuffer::sAnswerMessageParts splitMessage( const QByteArray & bytes );
+	struct WusbMessageBuffer::sAnswerMessageParts splitContinuedMessage(
+			const QByteArray & bytes, const WusbMessageBuffer::sAnswerMessageParts & prevMessageDesc );
 public slots:
 	/**
 	 * Receive bytes read from network and add message to internal buffering/processing.

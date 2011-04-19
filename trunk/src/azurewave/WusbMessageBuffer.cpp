@@ -12,6 +12,8 @@
 #include "WusbHelperLib.h"
 #include <QByteArray>
 #include <QMetaType>
+#include <string.h>
+
 
 bool WusbMessageBuffer::isFirstInstance = true;
 
@@ -19,11 +21,13 @@ WusbMessageBuffer::WusbMessageBuffer( WusbStack * owner, int mtuSize )
 : QThread( (QObject*) owner ) {
 	parentRef = owner;
 	logger = owner->getLogger();
-	lastMessageWasIncomplete = false;
-	incompleteMessage.contentURB = NULL;
 	if ( mtuSize < 1500 ) mtuSize = 1500;
 	lastReceivedPacket = new QByteArray();
 	lastReceivedPacket->reserve( mtuSize );
+
+	haveIncompleMessages = false;
+	incompleteMessages = new struct WusbMessageBuffer::sAnswerMessageParts[256];
+	::memset( incompleteMessages, 0, 255 * sizeof(struct WusbMessageBuffer::sAnswerMessageParts) );
 
 	// for usage in event queueing we have to register TypeOfMessage in QT-Metatype system
 	// XXX this is not threadsafe...
@@ -96,50 +100,110 @@ void WusbMessageBuffer::receive( const QByteArray & bytes ) {
 	if ( logger->isDebugEnabled() )
 		logger->debug(QString("Received message from hub: %1").arg(WusbHelperLib::messageToString(bytes,0)) );
 
-	if ( lastMessageWasIncomplete && incompleteMessage.contentURB ) {
-		struct WusbMessageBuffer::answerMessageParts contMsg = splitContinuedMessage( bytes );
+/*	printf("Last message incomplete = %s, haveContentURB = %s contentLenght=%i\n",
+			(lastMessageWasIncomplete?"true":"false"),
+			(incompleteMessage.contentURB?"true":"false"),
+			incompleteMessage.contentLength );
+*/
+
+	// We need to distingish:
+	//  - the "normal case": there are no messages incomplete waiting:
+	//        just split the message and return to above layer; store first message part if needed (incomplete msg)
+
+	// TAN of the received message
+	uint8_t tanMsg = bytes[3];
+
+	if ( !incompleteMessages[tanMsg].slotInUse ) {
+		// Extract essential message details
+		struct WusbMessageBuffer::sAnswerMessageParts message = splitMessage( bytes );
+
+		if ( message.isCorrect && message.isComplete ) {
+// 			lastMessageWasIncomplete = false;
+			emit informPacketMeta( message.receiverTAN, message.TAN, message.packetNum );
+			emit urbMessage( message.packetNum, message.contentURB );
+		} else {
+			if ( logger->isDebugEnabled() )
+				logger->debug(QString("Message is not complete! Correct=%1 Complete=%2").arg(
+						message.isCorrect? QString("true") : QString("false"),
+								message.isComplete? QString("true") : QString("false")
+				) );
+			if ( message.isCorrect ) {
+				// message is incomplete - we need to wait for more data to complete message
+				haveIncompleMessages = true;
+				message.slotInUse = true;
+				incompleteMessages[ message.TAN ] = message;
+			}
+			// if message is incorrect - we cannot do anything
+		}
+	} else {
+		// ELSE case: we need to continue a previous message
+		struct WusbMessageBuffer::sAnswerMessageParts contMsg = splitContinuedMessage( bytes, incompleteMessages[tanMsg] );
 		if ( contMsg.isCorrect ) {
 			emit informPacketMeta( contMsg.receiverTAN, contMsg.TAN, contMsg.packetNum );
+			printf("Appending bytes to buffer of incomplete message (append=%i, current=%i, all=%i)\n",
+					bytes.mid( 4 ).size(),
+					incompleteMessages[tanMsg].contentURB->size(),
+					incompleteMessages[tanMsg].contentLength );
+
+			incompleteMessages[tanMsg].contentURB->append( bytes.mid( 4 ) );	// append all URB data to buffer
+			incompleteMessages[tanMsg].receiverTAN = contMsg.receiverTAN;		// copy receive TAN
+
+			if ( incompleteMessages[tanMsg].contentLength == incompleteMessages[tanMsg].contentURB->size() ) {
+				// message completed - emit all data and continue normal
+				logger->debug("message is completed! Size=%1 ID=0x%2\n",
+						QString::number(incompleteMessages[tanMsg].contentLength),
+						QString::number(incompleteMessages[tanMsg].packetNum,16) );
+				emit urbMessage( incompleteMessages[tanMsg].packetNum, incompleteMessages[tanMsg].contentURB );
+				incompleteMessages[tanMsg].slotInUse = false;
+
+			} else if ( incompleteMessages[tanMsg].contentLength < incompleteMessages[tanMsg].contentURB->size() ) {
+				// Houston we have a problem...
+				logger->warn(QString("Received more data than expected! (%1 > %2)").arg(
+						QString::number( incompleteMessages[tanMsg].contentURB->size() ),
+						QString::number( incompleteMessages[tanMsg].contentLength ) ) );
+			}
+		} else {
+			// if message is not correct, we cannot do anything ?
+			logger->warn(QString("Received corrupt message with len = %1").arg(
+					QString::number( bytes.size() ) ) );
+		}
+	}
+
+/*
+	if ( lastMessageWasIncomplete && incompleteMessage.contentURB ) {
+		struct WusbMessageBuffer::sAnswerMessageParts contMsg = splitContinuedMessage( bytes );
+		if ( contMsg.isCorrect ) {
+			emit informPacketMeta( contMsg.receiverTAN, contMsg.TAN, contMsg.packetNum );
+			printf("Appending bytes to buffer of incomplete message (append=%i, current=%i, all=%i)\n",
+					bytes.mid( 4 ).size(), incompleteMessage.contentURB->size(),
+					incompleteMessage.contentLength );
 			incompleteMessage.contentURB->append( bytes.mid( 4 ) );	// append all URB data to buffer
+			incompleteMessage.receiverTAN = contMsg.receiverTAN;
+
 			if ( incompleteMessage.contentLength == incompleteMessage.contentURB->size() ) {
 				// message completed - emit all data and continue normal
-				emit urbMessage( contMsg.packetNum, incompleteMessage.contentURB );
+				printf("message is completed! Size=%i ID=0x%x\n", incompleteMessage.contentLength, incompleteMessage.packetNum  );
+				emit urbMessage( incompleteMessage.packetNum, incompleteMessage.contentURB );
 				lastMessageWasIncomplete = false;
 			} else if (incompleteMessage.contentLength < incompleteMessage.contentURB->size() ) {
 				// Houston we have a problem...
 				logger->warn(QString("Received more data than expected! (%1 > %2)").arg(
 						QString::number( incompleteMessage.contentURB->size() ), QString::number( incompleteMessage.contentLength ) ) );
 			}
+		} else {
+			// if message is not correct, we cannot do anything ?
+			logger->warn(QString("Received corrupt message with len = %1").arg(
+					QString::number( bytes.size() ) ) );
 		}
-		// if message is not correct, we cannot do anything ?
 		return;
 	}
+*/
 
-	// Extract essential message details
-	struct WusbMessageBuffer::answerMessageParts message = splitMessage( bytes );
-
-	if ( message.isCorrect && message.isComplete ) {
-		lastMessageWasIncomplete = false;
-		emit informPacketMeta( message.receiverTAN, message.TAN, message.packetNum );
-		emit urbMessage( message.packetNum, message.contentURB );
-	} else {
-		if ( logger->isDebugEnabled() )
-			logger->debug(QString("Message is not complete! Correct=%1 Complete=%2").arg(
-					message.isCorrect? QString("true") : QString("false"),
-							message.isComplete? QString("true") : QString("false")
-			) );
-		if ( message.isCorrect ) {
-			// message is incomplete - we need to wait for more data to complete message
-			lastMessageWasIncomplete = true;
-			incompleteMessage = message;
-		}
-		// if message is incorrect - we cannot do anything
-	}
 }
 
 
-struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitMessage( const QByteArray & bytes ) {
-	struct WusbMessageBuffer::answerMessageParts retValue;
+struct WusbMessageBuffer::sAnswerMessageParts WusbMessageBuffer::splitMessage( const QByteArray & bytes ) {
+	struct WusbMessageBuffer::sAnswerMessageParts retValue;
 	retValue.isCorrect = false;
 	if ( bytes.length() < WUSB_AZUREWAVE_RECEIVE_HEADER_LEN ) return retValue;
 	if ( bytes[2] != 0x10 ) return retValue;
@@ -147,6 +211,8 @@ struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitMessage( co
 	retValue.senderTAN   = bytes[0];
 	retValue.receiverTAN = bytes[1];
 	retValue.TAN = bytes[3];
+
+	if ( bytes[4] != 0x55 && bytes[5] != 0x55 ) return retValue;
 
 	unsigned int packetNum = 0;
 	packetNum |= (bytes[8] & 0x00ff);
@@ -181,8 +247,10 @@ struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitMessage( co
 }
 
 
-struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitContinuedMessage( const QByteArray & bytes ) {
-	struct WusbMessageBuffer::answerMessageParts retValue;
+struct WusbMessageBuffer::sAnswerMessageParts WusbMessageBuffer::splitContinuedMessage(
+		const QByteArray & bytes,
+		const WusbMessageBuffer::sAnswerMessageParts & prevMessageDesc ) {
+	struct WusbMessageBuffer::sAnswerMessageParts retValue;
 	retValue.isCorrect = false;
 	if ( bytes.length() < 4 ) return retValue;
 	if ( bytes[2] != 0x10 ) return retValue;
@@ -190,7 +258,13 @@ struct WusbMessageBuffer::answerMessageParts WusbMessageBuffer::splitContinuedMe
 	retValue.senderTAN   = bytes[0];
 	retValue.receiverTAN = bytes[1];
 	retValue.TAN = bytes[3];
-	retValue.isCorrect = true;
+	uint8_t expectedRectan = prevMessageDesc.receiverTAN;
+	if ( expectedRectan == 255 ) expectedRectan = 0;
+	else expectedRectan++;
+	if ( expectedRectan == retValue.receiverTAN )
+		retValue.isCorrect = false;
+	else
+		retValue.isCorrect = true;
 	return retValue;
 }
 

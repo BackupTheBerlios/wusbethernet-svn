@@ -322,11 +322,12 @@ bool WusbStack::sendURB (
 	QByteArray buffer = QByteArray();
 	buffer.reserve( packetLen );
 
-	currentSendTransactionNum = (currentSendTransactionNum +1 ) % 256;
+	currentSendTransactionNum = ( currentSendTransactionNum +1 ) % 256;
 	if ( sendPacketCounter == 0 )
 		currentTransactionNum = 0xff;
 	else
-		currentTransactionNum = qMin(currentSendTransactionNum, currentReceiveTransactionNum);
+		currentTransactionNum = ( currentTransactionNum +1 ) % 256;
+//		currentTransactionNum = qMin(currentSendTransactionNum, currentReceiveTransactionNum);
 
 	WusbHelperLib::appendTransactionHeader( buffer, currentSendTransactionNum, currentReceiveTransactionNum, currentTransactionNum );
 	WusbHelperLib::appendMarker55Header( buffer, 0, intervalVal );	// XXX parameter1 unknown
@@ -376,7 +377,7 @@ bool WusbStack::sendURB (
 	if ( directionType == TI_WusbStack::DATADIRECTION_IN )
 		buffer.append( 0x80 );
 	else
-		buffer.append('\0' );
+		buffer.append('\0' );sendPacketCounter
 	*/
 
 	buffer.append( '\0' );
@@ -399,6 +400,11 @@ bool WusbStack::sendURB (
 	if ( sendPacketCounter == 0 )
 		currentTransactionNum = 0;
 	sendPacketCounter++;
+	if ( logger->isDebugEnabled() )
+		logger->debug( QString("Send to hub: ID=%1 tan1=%2 tan2=%3 tan=%4 countMsg=%5").arg(
+				QString::number(packetID,16), QString::number(currentSendTransactionNum,16),
+				QString::number(currentReceiveTransactionNum,16), QString::number(currentTransactionNum,16),
+				messageSplit.isEmpty()? QString::number(1) : QString::number(messageSplit.size()) ) );
 	if ( messageSplit.isEmpty() ) {
 		delete urbData;
 		lastPacketSendTimeMillis = currentTimeMillis();
@@ -540,6 +546,7 @@ void WusbStack::informReceivedPacket( int newReceiverTAN, int lastSessionTAN, un
 	if ( logger->isTraceEnabled() )
 		logger->trace(QString("WusbStack::informReceivedPacket: %1 %2 %3").arg(
 				QString::number(newReceiverTAN),QString::number(lastSessionTAN),QString::number(packetCounter,16) ) );
+	// XXX this is wrong in some cases (dup messages, retransmit etc.)
 	currentReceiveTransactionNum = newReceiverTAN;
 
 }
